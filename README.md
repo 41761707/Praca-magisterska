@@ -31,7 +31,7 @@ Otrzymane wyniki zostaną poddane analizie względem innych prac dostępnych na 
 ## Abstract 
   To do
 ## Change log
-### 1 cześć realizacji: 01.01.2023 - 14.01.2023 
+### 1 cześć realizacji: 01.03.2023 - 14.03.2023 
 #### TO-DO:
   1. Przygotowanie opisu pracy wraz z wyszczególnieniem najważniejszej literatury, na której będzie opierała się ów praca
   2. Szkic podziału pracy na rozdziały, przygotowanie streszczenia zawierającego kluczowe informacje na temat tego, co w pracy ma się znaleźć
@@ -40,7 +40,4 @@ Otrzymane wyniki zostaną poddane analizie względem innych prac dostępnych na 
   5. Wybór technologii, w której praca będzie realizowana (silnik bazodanowy + back-end)
   6. Do przemyslenia, czy należy tworzyć jakikolwiek interfejs użytkownika (front-end)?*
 
-#### DONE:
-  TBA
-
-### 2 część relizacji: 15.01.2023 - 29.01.2023
+### 2 część relizacji: 15.03.2023 - 29.03.2023
