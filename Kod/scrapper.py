@@ -1,43 +1,49 @@
 import time
+import sys
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from datetime import datetime
 
 def get_team_id(team_name):
-    team_ids = { 'PSG' : 105,
-                 'Lens' : 106,
-                 'Marsylia' : 107,
-                 'Rennes' : 108,
-                 'Lille' : 109,
-                 'Monaco' : 110,
-                 'Lyon' : 111,
-                 'Clermont' : 112,
-                 'Nice' : 113,
-                 'Lorient' : 114,
-                 'Reims' : 115, 
-                 'Montpellier' : 116,
-                 'Toulouse' : 117,
-                 'Brest' : 118,
-                 'Strasbourg' : 119,
-                 'Nantes' : 120,
-                 'Auxerre' : 121,
-                 'AC Ajaccio' : 122,
-                 'Troyes' : 123,
-                 'Angers' : 124,
-                 'St. Etienne' : 125,
-                 'Metz' : 126,
-                 'Bordeaux' : 127,
-                 'Sochaux' : 128,
-                 'Paris FC' : 129,
-                 'Nimes' : 130,
-                 'Dijon' : 131,
-                 'Grenoble' : 132,
-                 'Amiens' : 133,
-                 'Caen' : 134,
-                 'Guingamp' : 135,
-                 'Le Havre' : 136,
-                 'Nancy' : 137,
-                 'Bastia' : 138
+    team_ids = { 
+                'Le Havre' : 136,
+                'Metz' : 126,
+                'Bordeaux' : 127,
+                'Caen' : 134,
+                'Guingamp' : 135,
+                'Paris FC' : 129,
+                'St. Etienne' : 125,
+                'Sochaux' : 128,
+                'Grenoble' : 132,
+                'Bastia' : 138,
+                'Quevilly Rouen' : 139,
+                'Amiens' : 133,
+                'Pau FC' : 140,
+                'Rodez' : 141,
+                'Laval' : 142,
+                'Valenciennes' : 143,
+                'Annecy' : 144,
+                'Dijon' : 131,
+                'Nimes' : 130,
+                'Niort' : 145,
+                'Villefranche' : 146,
+                'Toulouse' : 117,
+                'AC Ajaccio' : 122,
+                'Auxerre' : 121,
+                'Dunkerque' : 147,
+                'Nancy' : 137,
+                'Troyes' : 123,
+                'Clermont' : 112,
+                'Chambly' : 148,
+                'Chateauroux' : 149,
+                'Lorient' : 114,
+                'Lens' : 106,
+                'Le Mans' : 149,
+                'Orleans' : 150,
+                'GFC Ajaccio' : 151,
+                'Brest' : 118,
+                'Beziers' : 152,
+                'Red Star' : 153
                 }
     return team_ids[team_name]
 
@@ -59,7 +65,7 @@ def get_match_links(games, driver):
     return links
                 
 
-def get_match_data(driver, link):
+def get_match_data(driver, league_id, season_id, link):
     stats = []
     match_info = []
     match_data = {
@@ -114,8 +120,8 @@ def get_match_data(driver, link):
         match_info.append(div.text.strip())
 
     #print(match_info)
-    match_data['league'] = 3 #id ligi
-    match_data['season'] = 8 #id sezonu
+    match_data['league'] = league_id #id ligi
+    match_data['season'] = season_id #id sezonu
     match_data['home_team'] = get_team_id(match_info[1]) #nazwa gospodarzy
     match_data['away_team'] = get_team_id(match_info[3])
     match_data['game_date'] = parse_match_date(match_info[0])
@@ -167,14 +173,19 @@ def get_match_data(driver, link):
     return match_data
 
 def main():
+    #WYWOŁANIE
+    #python scrapper.py <id_ligi> <id_sezonu> <link do strony z wynikami na flashscorze>
     options = webdriver.ChromeOptions()
     options.add_experimental_option('excludeSwitches', ['enable-logging']) # Here
     driver = webdriver.Chrome(options=options)
     #Link do strony z wynikami
-    games = 'https://www.flashscore.pl/pilka-nozna/francja/ligue-1-2016-2017/wyniki/'
+    #games = 'https://www.flashscore.pl/pilka-nozna/francja/ligue-1-2016-2017/wyniki/'
+    league_id = int(sys.argv[1])
+    season_id = int(sys.argv[2])
+    games = sys.argv[3]
     links = get_match_links(games, driver)
     for link in links:
-        match_data = get_match_data(driver, link)
+        match_data = get_match_data(driver, league_id, season_id, link)
         sql = '''INSERT INTO matches (league, \
 season, \
 home_team, \
@@ -230,7 +241,8 @@ VALUES ({league}, \
 {away_team_yc}, \
 {home_team_rc}, \
 {away_team_rc}, \
-{result});'''.format(**match_data)
+'{result}');'''.format(**match_data)
         print(sql)
+        break
 if __name__ == '__main__':
     main()
