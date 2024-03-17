@@ -2,7 +2,7 @@
 -- Query: select * from teams
 LIMIT 0, 10000
 
--- Date: 2024-03-10 18:50
+-- Date: 2024-03-15 00:05
 */
 INSERT INTO `teams` (`id`,`country`,`name`) VALUES (1,1,'Śląsk Wrocław');
 INSERT INTO `teams` (`id`,`country`,`name`) VALUES (2,1,'Jagiellonia Białystok');
