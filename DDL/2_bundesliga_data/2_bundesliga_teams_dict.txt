@@ -32,5 +32,7 @@
         'Osnabruck' : 194,
         'Wurzburger Kickers' : 195,
         'Duisburg' : 196,
-        'Monachium 1860' : 197
+        'Monachium 1860' : 197,
+		'Elversberg' : 322,
+		
     }

@@ -36,5 +36,7 @@
                 'GFC Ajaccio' : 151,
                 'Brest' : 118,
                 'Beziers' : 152,
-                'Red Star' : 153
+                'Red Star' : 153,
+				'Angers' : 124,
+				'Concarneau' : 321
                 }

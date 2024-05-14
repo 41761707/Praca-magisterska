@@ -51,5 +51,7 @@
         'Sevilla B' : 316,
         'Getafe' : 271,
         'UCAM Murcia' : 317,
+		'Ferrol' : 326,
+		'Eldense' : 327
         
     }

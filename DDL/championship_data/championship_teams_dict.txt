@@ -39,5 +39,8 @@ team_ids = { 'Burnley' : 74,
 'Wolves' : 60,
 'Burton' : 104,
 'Newcastle' : 58,
-'Brighton' : 59
+'Brighton' : 59,
+'Leicester' : 71,
+'Southampton' : 73,
+'Plymouth' : 320
 }

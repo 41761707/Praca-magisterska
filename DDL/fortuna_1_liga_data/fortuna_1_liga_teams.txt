@@ -36,4 +36,8 @@ team_ids = { 'Puszcza Niepołomice' : 14,
 'Wisła Puławy' : 47,
 'Znicz Pruszków' : 48,
 'MKS Kluczbork' : 49,
+'Wisła Płock' : 19,
+'Lechia Gdańsk' : 20,
+'Motor Lublin' : 318,
+'Polonia Warszawa' : 319,
 }

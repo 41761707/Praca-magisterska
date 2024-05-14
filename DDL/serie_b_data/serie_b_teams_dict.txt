@@ -44,6 +44,10 @@
         'Avellino' : 253,
         'Novara' : 254,
         'Pro Vercelli' : 255,
-        'Latina' : 256
-
+        'Latina' : 256,
+		'Catanzaro' : 323,
+		'Sampdoria' : 217,
+		'FeralpiSalo' : 324,
+		'Lecco' : 325
+		
     }
