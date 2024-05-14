@@ -4,13 +4,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 from tensorflow.keras.models import Sequential, load_model
 from tensorflow.keras.callbacks import ModelCheckpoint
-from tensorflow.keras.losses import MeanSquaredError
-from tensorflow.keras.metrics import RootMeanSquaredError
-from tensorflow.keras.optimizers import Adam
+from sklearn.metrics import accuracy_score
+from tensorflow.keras.optimizers import Adagrad
 from tensorflow.keras.models import load_model
 from tensorflow.keras import layers
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import MinMaxScaler
 
 class Model:
     def __init__(self, model_columns_df, entries, create_model):
@@ -74,44 +72,26 @@ class Model:
         #print(self.create_model)
         if self.create_model == '1':
             model = Sequential([layers.Input((int(self.entries-1), 1)),
-                    layers.LSTM(64),
+                    layers.LSTM(64, activation = 'relu'),
                     layers.Dense(64, activation='tanh'),
                     layers.Dense(32, activation='relu'),
-                    layers.Dense(16, activation='relu'),
                     layers.Dense(1)])
             cp = ModelCheckpoint('model/', save_best_only = True)
             model.compile(loss='mse', 
-                optimizer=Adam(learning_rate=0.001),
-                metrics=['mean_absolute_error'])
+                optimizer=Adagrad(learning_rate=0.005),
+                metrics=['accuracy'])
 
-            model.fit(self.X_train, self.y_train, validation_data=(self.X_val, self.y_val), epochs=20, callbacks = [cp])
+            model.fit(self.X_train, self.y_train, validation_data=(self.X_val, self.y_val), epochs=20, batch_size = 32), #callbacks = [cp])
         else:
             model = load_model('model/')
-        train_predictions = model.predict(self.X_train).flatten()
-        #for i in range(len(train_predictions)):
-        #    train_predictions[i] = round(train_predictions[i])
-        plt.plot(self.indexes_train, train_predictions)
-        plt.plot(self.indexes_train, self.y_train)
-        plt.legend(['Training Predictions', 'Training Observations'])
-        plt.yticks(range(0, int(max(max(train_predictions), max(self.y_train))) + 1))
-        plt.savefig('train_4_Slask_tanh_relu_relu.png')
+
+        test_predictions = model.predict(self.X_test).flatten()#.astype(int)
+        print(test_predictions[:5])
+        plt.plot(self.indexes_test, test_predictions)
+        plt.plot(self.indexes_test, self.y_test)
+        #plt.yticks(range(0, int(max(max(test_predictions), max(self.y_train))) + 1))
+        #accuracy = accuracy_score(self.y_test, test_predictions)
+        #print("Accuracy:", accuracy)
+        plt.legend(['Testing Predictions', 'Testing Observations'])
         plt.show()
-
-
-        #val_predictions = model.predict(self.X_val).flatten()
-
-        #plt.plot(self.indexes_val, val_predictions)
-        #plt.plot(self.indexes_val, self.y_val)
-        #plt.legend(['Validation Predictions', 'Validation Observations'])
-        #plt.show()
-
-        #test_predictions = model.predict(self.X_test).flatten().astype(int)
-        #print(test_predictions[:5])
-        #plt.plot(self.indexes_test, test_predictions)
-        #plt.plot(self.indexes_test, self.y_test)
-        #plt.legend(['Testing Predictions', 'Testing Observations'])
-        #plt.show()
-
-
-
-    
+        plt.savefig('Arka_goals.png')

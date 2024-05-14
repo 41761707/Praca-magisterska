@@ -24,7 +24,7 @@ def db_connect():
 # Funkcja odpowiadająca za pobranie informacji z bazy danych
 def get_values():
     conn = db_connect()
-    query = "SELECT * FROM matches where game_date < '2024-04-11' and (home_team = 1 or away_team = 1) order by game_date"
+    query = "SELECT * FROM matches where game_date < '2024-04-11' order by game_date"
     matches_df = pd.read_sql(query, conn)
     query = "SELECT id, name FROM teams "
     teams_df = pd.read_sql(query, conn)

@@ -27,6 +27,12 @@ class DataPrep:
         for index, match in self.matches_df.iterrows():
             #self.model_columns.append({'id' : index, 'home_rating' : 0, 'away_rating' : 0, 'goals' : self.matches_df.loc[index, 'home_team_goals'] + self.matches_df.loc[index, 'away_team_goals']})
             self.model_columns.append({'id' : index, 'goals' : self.matches_df.loc[index, 'home_team_goals'] + self.matches_df.loc[index, 'away_team_goals']})
+            #self.model_columns.append({'id' : index, 
+            #                           'home_team_sc' : self.matches_df.loc[index, 'home_team_sc'],
+            #                           'away_team_sc' : self.matches_df.loc[index, 'away_team_sc'],
+            #                           'home_team_sog' : self.matches_df.loc[index, 'home_team_sog'],
+            #                           'away_team_sog' : self.matches_df.loc[index, 'away_team_sog'],
+            #                           'goals' : self.matches_df.loc[index, 'home_team_goals'] + self.matches_df.loc[index, 'away_team_goals']})
         self.model_columns_df = pd.DataFrame(self.model_columns)
         self.model_columns_df.set_index('id', inplace=True)
     
