@@ -16,7 +16,7 @@ class EloRating:
         return r + k * (a - p)
 
     def evaluate_k(self, goal_diff):
-        constant = 32 #Z gory ustalone przez autora
+        constant = 128 #Podrasowana stała
         if goal_diff == 2:
             constant = constant * 1/2
         elif goal_diff == 3:
@@ -24,24 +24,6 @@ class EloRating:
         elif goal_diff > 3:
             constant = constant * 3/4 + (goal_diff-3)/8
         return constant
-    
-    def rating_wrapper(self):
-        starting_rating = 1500
-        for team in self.teams_df.values:
-            if team[0] not in self.ratings:
-                self.ratings[team[0]] = starting_rating
-            if team[1] not in self.teams_dict:
-                self.teams_dict[team[0]] = team[1]
-        for index, match in self.matches_df.iterrows():
-            goal_diff = abs(match[4] - match[5])
-            home_rating, away_rating = self.elo_rating(self.ratings, match[2], match[3], match[-1], goal_diff)
-
-            self.matches_df.at[index, 'rating_home'] = home_rating
-            self.matches_df.at[index, 'rating_away'] = away_rating
-        #ratings_list = [(self.teams_dict[k],v) for k,v in self.ratings.items()]
-        #ratings_list.sort(key=lambda x: x[1], reverse= True)
-        #for item in ratings_list:
-        #    print(item[0],": ", item[1])
 
     def print_ratings(self):
         ratings_list = [(self.teams_dict[k],v) for k,v in self.ratings.items()]
@@ -70,6 +52,29 @@ class EloRating:
         ratings[home_team_id] = home_team_update
         ratings[away_team_id] = away_team_update
         return home_team_update, away_team_update
+    
+    def rating_wrapper(self):
+        starting_rating = 1500
+        for team in self.teams_df.values:
+            if team[0] not in self.ratings:
+                self.ratings[team[0]] = starting_rating
+            if team[1] not in self.teams_dict:
+                self.teams_dict[team[0]] = team[1]
+        for index, match in self.matches_df.iterrows():
+            goal_diff = abs(match[4] - match[5])
+            home_rating, away_rating = self.elo_rating(self.ratings, match[2], match[3], match[-1], goal_diff)
+
+            self.matches_df.at[index, 'home_rating'] = home_rating
+            self.matches_df.at[index, 'away_rating'] = away_rating
+    
+    def get_data(self):
+         return self.matches_df, self.teams_df, self.teams_dict, self.ratings
+    
+    def print_ratings(self):
+        ratings_list = [(self.teams_dict[k],v) for k,v in self.ratings.items()]
+        ratings_list.sort(key=lambda x: x[1], reverse= True)
+        for item in ratings_list:
+            print(item[0],": ", item[1])
 
 class BerrarRating:
     def __init__(self, matches_df, teams_df):
