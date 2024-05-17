@@ -1,9 +1,0 @@
-1. Dokładny termin oddania pracy.
-2. Jak zaawansowane powinno byc GUI do aplikacji?
-
-Działania na wtorek:
-1. Dodać odpowiednie dane (BTTS / OVER 2.5 / HOME_RATING / AWAY_RATING / RATING) do matches_df 
-2. Przygotować w miarę funkcjonujący model
-3. Dokończyć opis rozdziału odpowiedzialnego za przegląd literatury
-4. Normalizacja danych?
-5. Zabawa z warstwami

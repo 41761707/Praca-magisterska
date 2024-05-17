@@ -1,11 +1,11 @@
 import matplotlib.pyplot as plt
 
 # Dane
-name = 'Pavel Zacha'
-event = 'Assists'
+name = 'Andrei Svechnikov'
+event = 'Points'
 line = 0.5
-data = [0.05, 1, 0.05, 1, 0.05, 0.05, 0.05, 1, 2]
-x_values = ['TOR1', 'TOR2', 'TOR3', 'TOR4', 'TOR5', 'TOR6', 'TOR7', 'FLA1', 'FLA2']
+data = [0.05, 2, 2, 0.05, 1, 0.05, 1, 2, 1, 0.05]
+x_values = ['G1', 'G2', 'G3', 'G4', 'G5', 'G6', 'G7', 'G8', 'G9', 'G10']
 line_y = [line] * len(data)  # Wartość stała dla linii
 
 # Określenie kolorów dla słupków na podstawie ich wartości

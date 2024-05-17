@@ -11,37 +11,10 @@ from tensorflow.keras import layers
 from sklearn.model_selection import train_test_split
 
 class Model:
-    def mean_subtraction_y(self, array):
-        mean_value = np.mean(array)
-        array -= mean_value
-        return array
-    
-    def mean_subtraction_rank(self, array):
-        array = np.array(array, dtype=np.float64)  # Konwersja na typ float64
-        mean_values = np.mean(array, axis=0)
-        array -= mean_values
-        return array.tolist()
-
-    def normalize_y(self, array):
-        norm = np.linalg.norm(array)
-        if norm == 0:
-            return array  # Jeśli norma jest zerowa, zwróć tablicę bez zmian
-        print(norm)
-        array /= norm
-        return array
-    
-    def normalize_rank(self, array):
-        array = np.array(array, dtype=np.float64)  # Konwersja na typ float64
-        norms = np.linalg.norm(array, axis=2)  # Obliczanie normy dla każdego obszaru osobno
-        for i in range(array.shape[0]):
-            for j in range(array.shape[1]):
-                if not np.isclose(norms[i, j], 0):  # Sprawdzenie, czy norma nie jest bliska zeru
-                    array[i, j, :] /= norms[i, j]  # Normalizacja kolumny przez jej normę
-        return array.tolist()
-
-    def __init__(self, model_columns_df, entries, features, create_model):
+    def __init__(self, model_type, model_columns_df, entries, features, create_model):
         self.model_columns_df = model_columns_df
-        self.model = ""
+        self.model_type = model_type
+        self.model = ''
         self.entries = entries
         self.features = features
         self.create_model = create_model
@@ -60,6 +33,56 @@ class Model:
         self.X_test = []
         self.y_test = []
         self.test_predictions = []
+        self.mean_y = 0
+        self.mean_rank = 0
+        self.norm_y = 0
+        self.norm_rank = 0
+
+    def mean_subtraction_y(self, array):
+        self.mean_y = np.mean(array)
+        array -= self.mean_y
+        return array
+    
+    def mean_subtraction_rank(self, array):
+        #print(array[:5])
+        array = np.array(array, dtype=np.float64)  # Konwersja na typ float64
+        self.mean_rank = np.mean(array, axis=0)
+        array -= self.mean_rank
+        return array.tolist()
+
+    def normalize_y(self, array):
+        self.norm_y = np.linalg.norm(array)
+        if self.norm_y  == 0:
+            return array  # Jeśli norma jest zerowa, zwróć tablicę bez zmian
+        #print(norm)
+        array /= self.norm_y
+        return array
+    
+    def normalize_rank(self, array):
+        #print(array[:5])
+        array = np.array(array, dtype=np.float64)  # Konwersja na typ float64
+        self.norm_rank = np.linalg.norm(array, axis=0)  # Obliczanie normy dla każdego obszaru osobno
+        array /= self.norm_rank
+        return array.tolist()
+    
+    def ranked_probability_score(y_true, y_pred):
+        N = len(y_true)  # liczba obserwacji
+        M = len(y_pred[0])  # liczba możliwych wyników
+
+        # Inicjalizacja tablicy dla RPS
+        rps_array = np.zeros(N)
+
+        # Obliczanie RPS dla każdej obserwacji
+        for i in range(N):
+            rps = 0
+            for j in range(M - 1):
+                rps += (np.sum(y_pred[i][:j+1]) - np.sum(y_true[i][:j+1]))**2
+            rps_array[i] = rps / (M - 1)
+
+        # Obliczanie średniego RPS
+        mean_rps = np.mean(rps_array)
+        
+        return mean_rps
 
     def create_window(self):
         model_tolist = self.model_columns_df.values.tolist()
@@ -102,16 +125,15 @@ class Model:
         self.X = mid.reshape((len(self.indexes), mid.shape[1], 1))
         self.X = self.remade()
         #Odjecie sredniej
-        #print(self.X[:2])
         #self.y = self.mean_subtraction_y(self.y)
         #self.X = self.mean_subtraction_rank(self.X)
-        #print("ODJECIE SREDNIEJ")
-        #print(self.X[:2])
         #Normalizacja
         #self.y = self.normalize_y(self.y)
         #self.X = self.normalize_rank(self.X)
-        #print("NORMALIZACJA")
-        #print(self.X[:2])
+        #self.y = np.array(self.y)
+        #self.X = np.array(self.X)
+
+
 
     def divide_set(self):
         first = int(len(self.indexes) * 0.8)
@@ -127,7 +149,7 @@ class Model:
                     layers.Dense(32, activation = 'relu'),
                     layers.Dense(16, activation = 'relu'),
                     layers.Dense(1)])
-            cp = ModelCheckpoint('model/', save_best_only = True)
+            cp = ModelCheckpoint('model_goals/', save_best_only = True)
             self.model.compile(loss='mse', 
                 optimizer=Adagrad(learning_rate=0.001),
                 metrics=['accuracy'])
@@ -135,7 +157,7 @@ class Model:
             self.model.fit(self.X_train, self.y_train, validation_data=(self.X_val, self.y_val), epochs=25, batch_size = 32, callbacks = [cp])
             print(self.model.summary())
         else:
-            self.model = load_model('model/')
+            self.model = load_model('model_goals/')
 
         #test_predictions = model.predict(self.X_test).flatten().astype(int)
         #accuracy = accuracy_score(test_predictions, self.y_test)
@@ -147,6 +169,7 @@ class Model:
 
     def make_predictions(self, tests):
         test_prediction = self.model.predict(tests).flatten().astype(int)
+        test_prediction = np.clip(test_prediction, 0, 6)
         return test_prediction
 
     def train_winner_model(self):
@@ -165,6 +188,34 @@ class Model:
             print(self.model.summary())
         else:
             self.model = load_model('model_winner/')
+    
+    def predict_external_graphs(self, team_name):
+        test_predictions = self.model.predict(self.X_test).flatten().astype(int)
+        plt.plot(self.indexes_test, test_predictions)
+        plt.plot(self.indexes_test, self.y_test)
+        plt.legend(['Predykcje', 'Obserwacje'])
+        plt.savefig('graphs/goals/{}_goals_total.png'.format(team_name))
+        plt.close()
+        ou_accuracy = 0
+        exact_accuracy = 0
+        for i in range(len(test_predictions)):
+            generated_ou = "U" if test_predictions[i] < 2.5 else "O"
+            real_ou = "U" if self.y_test[i] < 2.5 else "O"
+            if generated_ou == real_ou:
+                ou_accuracy = ou_accuracy + 1
+            if test_predictions[i] == self.y_test[i]:
+                exact_accuracy = exact_accuracy + 1
+        return exact_accuracy / len(test_predictions), ou_accuracy / len(test_predictions), exact_accuracy, ou_accuracy, len(test_predictions)
+    
+    def predict_test(self):
+        test_predictions = self.model.predict(self.X_test).flatten().astype(int)
+        print(test_predictions)
+        #accuracy = accuracy_score(test_predictions, self.y_test)
+        #print("Accuracy:", accuracy)
+        #plt.plot(self.indexes_test[:50], test_predictions[:50])
+        #plt.plot(self.indexes_test[:50], self.y_test[:50])
+        #plt.legend(['Testing Predictions', 'Testing Observations'])
+        #plt.show()
 
 '''class Model:
     def __init__(self, data):

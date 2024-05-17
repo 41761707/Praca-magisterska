@@ -21,31 +21,22 @@ class DataPrep:
         self.upcoming_df = upcoming_df
         self.model_columns = []
         self.model_columns_df = []
-        
-
-    '''def prepare_predict(self):
+    
+    def prepare_predict_goals(self):
         for index, match in self.matches_df.iterrows():
-            #self.model_columns.append({'id' : index, 'home_rating' : 0, 'away_rating' : 0, 'goals' : self.matches_df.loc[index, 'home_team_goals'] + self.matches_df.loc[index, 'away_team_goals']})
-            #self.model_columns.append({'id' : index, 'goals' : self.matches_df.loc[index, 'home_team_goals'] + self.matches_df.loc[index, 'away_team_goals']})
             self.model_columns.append({'id' : index, 
-                                       'home_team' : self.matches_df.loc[index, 'home_team'],
-                                       'away_team' : self.matches_df.loc[index, 'away_team'],
                                        'home_rating' : self.matches_df.loc[index, 'home_rating'],
                                        'away_rating' : self.matches_df.loc[index, 'away_rating'],
-                                       'home_team_sc' : self.matches_df.loc[index, 'home_team_sc'],
-                                       'away_team_sc' : self.matches_df.loc[index, 'away_team_sc'],
-                                       'home_team_sog' : self.matches_df.loc[index, 'home_team_sog'],
-                                       'away_team_sog' : self.matches_df.loc[index, 'away_team_sog'],
                                        'goals' : self.matches_df.loc[index, 'home_team_goals'] + self.matches_df.loc[index, 'away_team_goals']})
         self.model_columns_df = pd.DataFrame(self.model_columns)
-        self.model_columns_df.set_index('id', inplace=True)'''
-    
-    def prepare_predict(self):
+        self.model_columns_df.set_index('id', inplace=True)
+
+    def prepare_predict_winner(self):
         for index, match in self.matches_df.iterrows():
             self.model_columns.append({'id' : index, 
                                        'home_rating' : self.matches_df.loc[index, 'home_rating'],
                                        'away_rating' : self.matches_df.loc[index, 'away_rating'],
-                                       'goals' : self.matches_df.loc[index, 'home_team_goals'] + self.matches_df.loc[index, 'away_team_goals']})
+                                       'result' : self.matches_df.loc[index, 'result']})
         self.model_columns_df = pd.DataFrame(self.model_columns)
         self.model_columns_df.set_index('id', inplace=True)
 
