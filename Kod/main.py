@@ -21,7 +21,7 @@ def db_connect():
     conn = mysql.connector.connect(
         host="localhost",
         user="root",
-        password="PLACEHOLDER",
+        password="placeholder",
         database="ekstrabet"
     )
     return conn
@@ -45,7 +45,7 @@ def get_values():
     conn.close()
     return matches_df, teams_df, upcoming_df
 
-'''def tmp_test(matches_df, teams_dict, teams_df, upcoming_df, key):
+def accuracy_test(matches_df, teams_dict, teams_df, upcoming_df, key):
     filtered_matches_df = matches_df.loc[(matches_df['home_team'] == key) | (matches_df['away_team'] == key)]
     model_type = 'goals_total'
     data = dataprep_module.DataPrep(filtered_matches_df , teams_df, upcoming_df)
@@ -53,9 +53,9 @@ def get_values():
     #data.prepare_predict_winner()
 
     _, _, _, model_columns_df = data.get_data() 
-    predict_model = model_module.Model(model_type, model_columns_df, 9, 3, 'old')
+    predict_model = model_module.Model(model_type, model_columns_df, 9, 10, 'old')
     predict_model.create_window()
-    predict_model.window_to_numpy()
+    predict_model.window_to_numpy(1)
     predict_model.divide_set()
     predict_model.train_goals_total_model()
     exact_accuracy, ou_accuracy, exact, ou, predictions = predict_model.predict_external_graphs(teams_dict[key])
@@ -64,62 +64,12 @@ def get_values():
                                      ou_accuracy,
                                      exact, 
                                      ou, 
-                                     predictions))'''
+                                     predictions))
 
-
-
-##
-# Funkcja odpowiedzialna za rozruch oraz kontrolowanie przepływu programu
-def main():
-    #Pobierz dane z bazy danych
-    matches_df, teams_df, upcoming_df = get_values()
-    #print(upcoming_df.head)
-    #Wygenerowanie cech + rankingow dla modelu
-    rating_factory = ratings_module.RatingFactory()
-    # Tworzenie obiektu klasy EloRating
-    my_rating = rating_factory.create_rating("MyRating", matches_df, teams_df)
-    # Wywołanie funkcji rating_wrapper
-    my_rating.rating_wrapper()
-    matches_df, _, teams_dict , _ = my_rating.get_data()
-
-    #tmp_test(matches_df, teams_dict, teams_df, upcoming_df, int(sys.argv[1]))
-    #Filtrowanie zbioru względem danej drużyny
-    #filtered_matches_df = matches_df.loc[(matches_df['home_team'] == 154) | (matches_df['away_team'] == 154)]
-    #Wypisywanie drużyn oraz ich rankingów
-    #my_rating.print_ratings()
-
-    #Przygotowanie danych
-    #Jakiego typu predykcji dokonujemy? Mozliwosci:
-    # goals_total - Liczba bramek w meczu
-    # team_goals - Liczba bramek danego zespołu
-    # winnter - predykcja 1X2
-    # corner_total - Liczba rzutow roznych w meczu
-    # team_goals - Liczba rzutow roznych danego zespolu
-    # fouls_total - Liczba fauli w danym meczu
-    # team_fouls - Liczba fauli danej druzyny
-    # offsides_total - Liczba spalonych w meczu
-    # offsides_team - Liczba spalonych danej drużyny
-    model_type = 'goals_total'
-    data = dataprep_module.DataPrep(matches_df, teams_df, upcoming_df)
-    data.prepare_predict_goals()
-    #data.prepare_predict_winner()
-
-    _, _, _, model_columns_df = data.get_data() 
-    #Generowanie lub trenowanie modelu
-    predict_model = model_module.Model(model_type, model_columns_df, 9, 3, 'old')
-    predict_model.create_window()
-    predict_model.window_to_numpy()
-    predict_model.divide_set()
-    predict_model.train_goals_total_model()
-    #predict_model.train_winner_model()
-    #predict_model.predict_test()
-
-    #Mock testing
-    
-    schedule = [[48,19]]
+def predict_chosen_matches(data, schedule, predict_model, teams_dict):
     external_tests = data.generate_external_test(schedule)
     external_tests_np = np.array(external_tests)
-    #real_results = [1,5,0,3,2,5,4,2,2]
+    #real_results = [0, 5, 2, 5, 3, 4, 1, 3, 2 ,2, 0, 2, 4]
     predictions = predict_model.make_predictions(external_tests_np)
     #ou_accuracy = 0
     #exact_accuracy = 0
@@ -138,7 +88,66 @@ def main():
     #Wypisywanie ostatnich 4 spotkan zespolu o id 7
     #data.return_last_matches(4,7)
     #Generowanie meczów do przewidzenia
-    #league = league_module.League(matches_df, teams_df)'''
+    #league = league_module.League(matches_df, teams_df)
+
+
+
+##
+# Funkcja odpowiedzialna za rozruch oraz kontrolowanie przepływu programu
+def main():
+    matches_df, teams_df, upcoming_df = get_values()
+    rating_factory = ratings_module.RatingFactory()
+    my_rating = rating_factory.create_rating("MyRating", matches_df, teams_df)
+    my_rating.rating_wrapper()
+    matches_df, _, teams_dict , _ = my_rating.get_data()
+    #Filtrowanie zbioru względem danej drużyny
+    #filtered_matches_df = matches_df.loc[(matches_df['home_team'] == 154) | (matches_df['away_team'] == 154)]
+    #Wypisywanie drużyn oraz ich rankingów
+    #my_rating.print_ratings()
+    #my_rating.print_powers()
+    data = dataprep_module.DataPrep(matches_df, teams_df, upcoming_df)
+    model_type = sys.argv[1]
+    model_mode = sys.argv[2]
+    #team_id = int(sys.argv[3])
+    #accuracy_test(matches_df, teams_dict, teams_df, upcoming_df, int(sys.argv[3]))
+    #print(matches_df.head)
+    if model_type == 'goals_total':
+        data.prepare_predict_goals()
+        _, _, _, model_columns_df = data.get_data() 
+        predict_model = model_module.Model(model_type, model_columns_df, 9, 10, model_mode)
+        predict_model.create_window()
+        predict_model.window_to_numpy(1)
+        predict_model.divide_set()
+        predict_model.train_goals_total_model()
+        predict_model.predict_test()
+
+    if model_type == 'goals_teams':
+        data.prepare_predict_team_goals()
+        _, _, _, model_columns_df = data.get_data() 
+        predict_model = model_module.Model(model_type, model_columns_df, 9, 10, model_mode)
+        predict_model.create_window()
+        predict_model.window_to_numpy(3)
+        predict_model.divide_set()
+        predict_model.train_goals_teams_model()
+        predict_model.predict_test()
+
+    #Mock testing
+    '''schedule = [[124, 147], [121, 321], [138, 129], [127, 140], [134, 143], [132, 133], [135, 142], [139, 125], [141, 122], [123, 144], [11, 6], [7, 14], [205, 198],
+                [157, 158], [159, 168], [155, 180], [160, 156], [183, 164], [165, 154], [169, 163], [161, 162], [166, 167],
+                [16, 17], [1, 10], [9, 2], [28, 21], [32, 23], [24, 30],
+                [213, 202], [207, 201], [323,224],
+                [280, 293], [282, 286], [327, 278], [291, 300], [288, 292]]''' #18.05.2024
+    
+    schedule = [[53, 66], [65, 58], [59, 56], [74, 67], [61, 63], [64, 54], [51, 60], [68, 62], [52, 57], [70, 55], #Premier League
+                [136, 107], [106, 116], [109, 113], [114, 112], [111, 119], [126, 105], [110, 120], [115, 108], [117, 118], #Ligue 1
+                [264, 268], [259, 263], [257, 267], [262, 260], [270, 284], [277, 269], [265, 273], [272, 266], [261, 258], #La Liga 
+                [281, 290], [303, 274], [294, 326], #LaLiga 2
+                [174, 188], [322, 186], [173, 170], [178, 177], [176, 182], [187, 181], [194, 171], [189, 175], [184, 185], #2. Bundesliga
+                [13, 4], [15, 5], [12, 3], #Ekstraklasa 
+                [319, 35], [22, 33], [20, 27], #1 Liga Fortuna
+                [210, 218], [208, 226], [209, 211], [200, 199], [203, 219] #Serie A
+                ]
+    predict_chosen_matches(data, schedule, predict_model, teams_dict)
 
 if __name__ == '__main__':
     main()

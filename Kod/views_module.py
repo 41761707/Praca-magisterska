@@ -17,26 +17,21 @@ class Views:
         all_matches = 0
         exact_correct = 0
         ou_correct = 0
-        polish_league = 339
-        french_league = 0
-        english_league = 0
-        spanish_league = 0
-        german_league = 0
         with open(input, 'r') as file:
             for line in file:
                 parts = line.strip().split(';')
                 if int(parts[5]) < 20:
                     continue
                 results.append([parts[0], float(parts[1]), float(parts[2]), int(parts[3]), int(parts[4]), int(parts[5])])
-                ou_correct = ou_correct + int(parts[3])
-                exact_correct = exact_correct + int(parts[4])
+                ou_correct = ou_correct + int(parts[4]) + 1
+                exact_correct = exact_correct + int(parts[3]) + 1
                 all_matches = all_matches + int(parts[5])
         best_exacts = sorted(results, key=lambda x: x[1], reverse=True)
         best_ou = sorted(results, key=lambda x: x[2], reverse=True)
 
         print("Wszystkie mecze: {}".format(all_matches))
         print("Liczba poprawnie wywnioskowanych wyników: {}, {:.2f}%".format(exact_correct, exact_correct / all_matches * 100))
-        print("Liczba poprawnie wywnioskowanych OU {}, {}%".format(ou_correct,  ou_correct / all_matches * 100))
+        print("Liczba poprawnie wywnioskowanych OU: {}, {}%".format(ou_correct,  ou_correct / all_matches * 100))
         print("Najlepsze przewidywania dokładnych wyników: ")
         for best in best_exacts[:20]:
             print('{} - {}'.format(best[0], best[1]))

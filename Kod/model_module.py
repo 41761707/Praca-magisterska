@@ -8,7 +8,9 @@ from sklearn.metrics import accuracy_score
 from tensorflow.keras.optimizers import Adagrad
 from tensorflow.keras.models import load_model
 from tensorflow.keras import layers
+from tensorflow.keras.losses import SparseCategoricalCrossentropy
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import OneHotEncoder, MinMaxScaler
 
 class Model:
     def __init__(self, model_type, model_columns_df, entries, features, create_model):
@@ -37,33 +39,21 @@ class Model:
         self.mean_rank = 0
         self.norm_y = 0
         self.norm_rank = 0
-
-    def mean_subtraction_y(self, array):
-        self.mean_y = np.mean(array)
-        array -= self.mean_y
-        return array
     
-    def mean_subtraction_rank(self, array):
-        #print(array[:5])
-        array = np.array(array, dtype=np.float64)  # Konwersja na typ float64
-        self.mean_rank = np.mean(array, axis=0)
-        array -= self.mean_rank
-        return array.tolist()
+    def normalize_rank(self, data):
+        data_np = np.array(data)
 
-    def normalize_y(self, array):
-        self.norm_y = np.linalg.norm(array)
-        if self.norm_y  == 0:
-            return array  # Jeśli norma jest zerowa, zwróć tablicę bez zmian
-        #print(norm)
-        array /= self.norm_y
-        return array
-    
-    def normalize_rank(self, array):
-        #print(array[:5])
-        array = np.array(array, dtype=np.float64)  # Konwersja na typ float64
-        self.norm_rank = np.linalg.norm(array, axis=0)  # Obliczanie normy dla każdego obszaru osobno
-        array /= self.norm_rank
-        return array.tolist()
+        # Znalezienie minimalnej i maksymalnej wartości w całej tablicy
+        min_val = np.min(data_np)
+        max_val = np.max(data_np)
+
+        # Normalizacja tablicy
+        normalized_data = (data_np - min_val) / (max_val - min_val)
+
+        # Konwersja znormalizowanej tablicy z powrotem do listy (opcjonalnie)
+        normalized_data_list = normalized_data.tolist()
+
+        return normalized_data_list
     
     def ranked_probability_score(y_true, y_pred):
         N = len(y_true)  # liczba obserwacji
@@ -104,40 +94,35 @@ class Model:
         self.window_df = pd.DataFrame(self.window_helper)
         self.window_df = self.window_df.drop(columns=['id'])
 
-    def remade(self):
+    def remade(self, labels):
         new_self_x = []
         for list in self.X:
             row = []
             for inner_list in list:
                 for inner_inner in inner_list:
-                    row.append(inner_inner)
+                    row.append(inner_inner[0:-1 * labels])
             new_self_x.append(row)
         return new_self_x
 
         
-    def window_to_numpy(self):
+    def window_to_numpy(self, labels):
         df_as_np = self.window_df.to_numpy()
         self.indexes = list(range(1, len(df_as_np) + 1))
         mid = df_as_np[:, 0:-1]
         tmp_y = df_as_np[:, -1]
         for element in tmp_y:
-            self.y.append(element[-1])
+            self.y.append(element[(-1) * labels :])
         self.X = mid.reshape((len(self.indexes), mid.shape[1], 1))
-        self.X = self.remade()
-        #Odjecie sredniej
-        #self.y = self.mean_subtraction_y(self.y)
-        #self.X = self.mean_subtraction_rank(self.X)
+        self.X = self.remade(labels)
         #Normalizacja
-        #self.y = self.normalize_y(self.y)
         #self.X = self.normalize_rank(self.X)
-        #self.y = np.array(self.y)
-        #self.X = np.array(self.X)
+        #print(self.X[:5])
 
 
 
     def divide_set(self):
-        first = int(len(self.indexes) * 0.8)
-        second = int(len(self.indexes) * 0.9)
+        first = int(len(self.indexes) * 0.7)
+        second = int(len(self.indexes) * 0.8)
         self.indexes_train, self.X_train, self.y_train = self.indexes[:first], self.X[:first], self.y[:first]
         self.indexes_val, self.X_val, self.y_val = self.indexes[first:second], self.X[first:second], self.y[first:second]
         self.indexes_test, self.X_test, self.y_test = self.indexes[second:], self.X[second:], self.y[second:]
@@ -153,11 +138,27 @@ class Model:
             self.model.compile(loss='mse', 
                 optimizer=Adagrad(learning_rate=0.001),
                 metrics=['accuracy'])
-
-            self.model.fit(self.X_train, self.y_train, validation_data=(self.X_val, self.y_val), epochs=25, batch_size = 32, callbacks = [cp])
-            print(self.model.summary())
+            self.model.fit(self.X_train, self.y_train, validation_data=(self.X_val, self.y_val), epochs=30, batch_size = 32, callbacks = [cp])
+            #print(self.model.summary())
         else:
             self.model = load_model('model_goals/')
+
+    def train_goals_per_team(self):
+        if self.create_model == 'new':
+            self.model = Sequential([layers.Input((int(self.entries-1), self.features)),
+                    layers.LSTM(64, activation = 'relu'),
+                    layers.Dense(32, activation = 'relu'),
+                    layers.Dense(16, activation = 'relu'),
+                    layers.Dense(3)])
+            cp = ModelCheckpoint('model_team_goals/', save_best_only = True)
+            self.model.compile(loss='mse', 
+                optimizer=Adagrad(learning_rate=0.001),
+                metrics=['accuracy'])
+
+            self.model.fit(self.X_train, self.y_train, validation_data=(self.X_val, self.y_val), epochs=25, batch_size = 32, callbacks = [cp])
+            #print(self.model.summary())
+        else:
+            self.model = load_model('model_team_goals/')
 
         #test_predictions = model.predict(self.X_test).flatten().astype(int)
         #accuracy = accuracy_score(test_predictions, self.y_test)
@@ -172,25 +173,25 @@ class Model:
         test_prediction = np.clip(test_prediction, 0, 6)
         return test_prediction
 
-    def train_winner_model(self):
+    def train_goals_teams_model(self):
         if self.create_model == 'new':
             self.model = Sequential([layers.Input((int(self.entries-1), self.features)),
                     layers.LSTM(64, activation = 'relu'),
                     layers.Dense(32, activation = 'relu'),
-                    layers.Dense(16, activation = 'relu'),
-                    layers.Dense(3, activation = 'softmax')])
-            cp = ModelCheckpoint('model_winner/', save_best_only = True)
+                    layers.Dense(3)])
+            cp = ModelCheckpoint('model_goals_teams/', save_best_only = True)
             self.model.compile(loss='mse', 
                 optimizer=Adagrad(learning_rate=0.001),
                 metrics=['accuracy'])
 
-            self.model.fit(self.X_train, self.y_train, validation_data=(self.X_val, self.y_val), epochs=20, batch_size =32)#, callbacks = [cp])
-            print(self.model.summary())
+            self.model.fit(self.X_train, self.y_train, validation_data=(self.X_val, self.y_val), epochs=50, callbacks = [cp])
+            #print(self.model.summary())
         else:
-            self.model = load_model('model_winner/')
+            self.model = load_model('model_goals_teams/')
     
     def predict_external_graphs(self, team_name):
         test_predictions = self.model.predict(self.X_test).flatten().astype(int)
+        test_predictions = np.clip(test_predictions, 0, 6)
         plt.plot(self.indexes_test, test_predictions)
         plt.plot(self.indexes_test, self.y_test)
         plt.legend(['Predykcje', 'Obserwacje'])
@@ -200,22 +201,28 @@ class Model:
         exact_accuracy = 0
         for i in range(len(test_predictions)):
             generated_ou = "U" if test_predictions[i] < 2.5 else "O"
-            real_ou = "U" if self.y_test[i] < 2.5 else "O"
+            real_ou = "U" if self.y_test[i][0] < 2.5 else "O"
             if generated_ou == real_ou:
                 ou_accuracy = ou_accuracy + 1
-            if test_predictions[i] == self.y_test[i]:
+            if test_predictions[i] == self.y_test[i][0]:
                 exact_accuracy = exact_accuracy + 1
         return exact_accuracy / len(test_predictions), ou_accuracy / len(test_predictions), exact_accuracy, ou_accuracy, len(test_predictions)
     
     def predict_test(self):
         test_predictions = self.model.predict(self.X_test).flatten().astype(int)
         print(test_predictions)
-        #accuracy = accuracy_score(test_predictions, self.y_test)
-        #print("Accuracy:", accuracy)
-        #plt.plot(self.indexes_test[:50], test_predictions[:50])
-        #plt.plot(self.indexes_test[:50], self.y_test[:50])
-        #plt.legend(['Testing Predictions', 'Testing Observations'])
-        #plt.show()
+        accuracy = accuracy_score(test_predictions, self.y_test)
+        test_predictions = np.clip(test_predictions, 0, 6)
+        ou_predictions = 0
+        for i in range(len(test_predictions)):
+            if (self.y_test[i][0] < 2.5 and test_predictions[i] < 2.5) or (self.y_test[i][0] > 2.5 and test_predictions[i] > 2.5):
+                ou_predictions += 1
+        print("Accuracy:", accuracy)
+        print("OU: ", ou_predictions / len(test_predictions))
+        plt.plot(self.indexes_test[:50], test_predictions[:50])
+        plt.plot(self.indexes_test[:50], self.y_test[:50])
+        plt.legend(['Testing Predictions', 'Testing Observations'])
+        plt.show()
 
 '''class Model:
     def __init__(self, data):

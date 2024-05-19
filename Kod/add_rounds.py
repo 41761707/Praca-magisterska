@@ -7,7 +7,7 @@ def db_connect():
     conn = mysql.connector.connect(
         host="localhost",
         user="root",
-        password="radikey",
+        password="PLACEHOLDER",
         database="ekstrabet"
     )
     return conn

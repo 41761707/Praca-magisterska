@@ -27,6 +27,25 @@ class DataPrep:
             self.model_columns.append({'id' : index, 
                                        'home_rating' : self.matches_df.loc[index, 'home_rating'],
                                        'away_rating' : self.matches_df.loc[index, 'away_rating'],
+                                       'home_home_att_power' : self.matches_df.at[index, 'home_home_att_power'],
+                                       'home_home_def_power' : self.matches_df.at[index, 'home_home_def_power'],
+                                       'home_away_att_power' : self.matches_df.at[index, 'home_away_att_power'],
+                                       'home_away_def_power' : self.matches_df.at[index, 'home_away_def_power'],
+                                       'away_home_att_power' : self.matches_df.at[index, 'away_home_att_power'],
+                                       'away_home_def_power' : self.matches_df.at[index, 'away_home_def_power'],
+                                       'away_away_att_power' : self.matches_df.at[index, 'away_away_att_power'],
+                                       'away_away_def_power' : self.matches_df.at[index, 'away_away_def_power'],
+                                       'goals' : self.matches_df.loc[index, 'home_team_goals'] + self.matches_df.loc[index, 'away_team_goals']})
+        self.model_columns_df = pd.DataFrame(self.model_columns)
+        self.model_columns_df.set_index('id', inplace=True)
+
+    def prepare_predict_team_goals(self):
+        for index, match in self.matches_df.iterrows():
+            self.model_columns.append({'id' : index, 
+                                       'home_rating' : self.matches_df.loc[index, 'home_rating'],
+                                       'away_rating' : self.matches_df.loc[index, 'away_rating'],
+                                       'home_team_goals' : self.matches_df.loc[index, 'home_team_goals'],
+                                       'away_team_goals' : self.matches_df.loc[index, 'away_team_goals'],
                                        'goals' : self.matches_df.loc[index, 'home_team_goals'] + self.matches_df.loc[index, 'away_team_goals']})
         self.model_columns_df = pd.DataFrame(self.model_columns)
         self.model_columns_df.set_index('id', inplace=True)
@@ -50,7 +69,17 @@ class DataPrep:
         self.model_columns_df.set_index('id', inplace=True)'''
     
     def turn_match_into_numpy(self, match):
-        return [match['home_rating'], match['away_rating'], match['home_team_goals'] + match['away_team_goals']]
+        #return [match['home_rating'], match['away_rating']]
+        return [match['home_rating'], 
+                match['away_rating'], 
+                match['home_home_att_power'],
+                match['home_home_def_power'],
+                match['home_away_att_power'],
+                match['home_away_def_power'],
+                match['away_home_att_power'],
+                match['away_home_def_power'],
+                match['away_away_att_power'],
+                match['away_away_def_power']]
     
     def return_last_matches(self, amount, team_id):
         #filtered_rows = self.model_columns_df[(self.model_columns_df['home_team'] == int(team_id)) | (self.model_columns_df['away_team'] == int(team_id))].tail(int(amount))
