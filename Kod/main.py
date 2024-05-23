@@ -21,7 +21,7 @@ def db_connect():
     conn = mysql.connector.connect(
         host="localhost",
         user="root",
-        password="placeholder",
+        password="PLACEHOLDER",
         database="ekstrabet"
     )
     return conn
@@ -30,124 +30,202 @@ def db_connect():
 # Funkcja odpowiadająca za pobranie informacji z bazy danych
 def get_values():
     conn = db_connect()
-    query = "SELECT * FROM matches where game_date < '2024-04-11' order by game_date"
+    query = "SELECT * FROM matches where game_date < '2024-04-10' order by game_date"
     matches_df = pd.read_sql(query, conn)
     query = "SELECT id, name FROM teams"
     teams_df = pd.read_sql(query, conn)
-    #teams_df.set_index('id', inplace=True)
     matches_df['result'] = matches_df['result'].replace({'X': 0, '1' : 1, '2' : -1}) # 0 - remis, 1 - zwyciestwo gosp. -1 - zwyciestwo goscia
-    #matches_df = matches_df.drop(columns=['game_date'])
     matches_df.set_index('id', inplace=True)
-    query = "SELECT id, home_team, away_team, game_date, result FROM matches where game_date >= '2024-04-11' order by game_date"
+    query = "SELECT id, home_team, away_team, league, season FROM matches where game_date >= '2024-04-10' order by game_date"
     upcoming_df = pd.read_sql(query, conn)
-    upcoming_df = upcoming_df.drop(columns=['game_date'])
-    upcoming_df.set_index('id', inplace=True)
+    #upcoming_df.set_index('id', inplace=True)
     conn.close()
     return matches_df, teams_df, upcoming_df
 
-def accuracy_test(matches_df, teams_dict, teams_df, upcoming_df, key):
+def accuracy_test_goals(matches_df, teams_dict, teams_df, upcoming_df, key):
     filtered_matches_df = matches_df.loc[(matches_df['home_team'] == key) | (matches_df['away_team'] == key)]
     model_type = 'goals_total'
     data = dataprep_module.DataPrep(filtered_matches_df , teams_df, upcoming_df)
     data.prepare_predict_goals()
-    #data.prepare_predict_winner()
 
     _, _, _, model_columns_df = data.get_data() 
-    predict_model = model_module.Model(model_type, model_columns_df, 9, 10, 'old')
+    predict_model = model_module.Model(model_type, model_columns_df, 9, 6, 'old')
     predict_model.create_window()
     predict_model.window_to_numpy(1)
     predict_model.divide_set()
     predict_model.train_goals_total_model()
-    exact_accuracy, ou_accuracy, exact, ou, predictions = predict_model.predict_external_graphs(teams_dict[key])
+    exact_accuracy, ou_accuracy, exact, ou, predictions = predict_model.graph_team_goals(teams_dict[key])
     print("{};{};{};{};{};{}".format(key,
                                      exact_accuracy,
                                      ou_accuracy,
                                      exact, 
                                      ou, 
                                      predictions))
+    
+def accuracy_test_winner(matches_df, teams_dict, teams_df, upcoming_df, key):
+    filtered_matches_df = matches_df.loc[(matches_df['home_team'] == key) | (matches_df['away_team'] == key)]
+    model_type = 'winner'
+    data = dataprep_module.DataPrep(filtered_matches_df , teams_df, upcoming_df)
+    data.prepare_predict_winner()
 
-def predict_chosen_matches(data, schedule, predict_model, teams_dict):
-    external_tests = data.generate_external_test(schedule)
+    _, _, _, model_columns_df = data.get_data() 
+    predict_model = model_module.Model(model_type, model_columns_df, 9, 2, 'old')
+    predict_model.create_window()
+    predict_model.window_to_numpy(3)
+    predict_model.divide_set()
+    predict_model.train_winner_model()
+    accuracy, predictions = predict_model.graph_team_winner(teams_dict[key])
+    print("{};{};{}".format(key,
+                                     accuracy,
+                                     predictions))
+
+def predict_chosen_matches_goals(data, schedule, predict_model, teams_dict, ratings, powers, last_five_matches, upcoming_df):
+    external_tests = data.generate_goals_test(schedule, ratings, powers, last_five_matches)
     external_tests_np = np.array(external_tests)
-    #real_results = [0, 5, 2, 5, 3, 4, 1, 3, 2 ,2, 0, 2, 4]
-    predictions = predict_model.make_predictions(external_tests_np)
-    #ou_accuracy = 0
-    #exact_accuracy = 0
+    predictions = predict_model.make_goals_predictions(external_tests_np)
     for i in range(len(predictions)):
+        record = upcoming_df.loc[(upcoming_df['home_team'] == schedule[i][0]) & (upcoming_df['away_team'] == schedule[i][1]) & (upcoming_df['season'] == 1)]
+        id = record.iloc[0]['id']
         generated_ou = "U" if predictions[i] < 2.5 else "O"
-        #real_ou = "U" if real_results[i] < 2.5 else "O"
-        print("Spotkanie: {} - {}".format(teams_dict[schedule[i][0]], teams_dict[schedule[i][1]]))
-        print("Wygenerowana liczba bramek w spotkaniu: {} - O/U: {}".format(predictions[i], generated_ou))
-        #print("Prawdziwy wynik spotkania: {} - O/U: {}".format(real_results[i], real_ou))
-        #if generated_ou == real_ou:
-        #    ou_accuracy = ou_accuracy + 1
-        #if predictions[i] == real_results[i]:
-        #    exact_accuracy = exact_accuracy + 1
-    #print("Dokładność predykcji dokładnych wyników: {:.2f}%".format((exact_accuracy / len(predictions)) * 100))
-    #print("Dokładność predykcji Over/Under: {:.2f}%".format((ou_accuracy / len(predictions)) * 100))
-    #Wypisywanie ostatnich 4 spotkan zespolu o id 7
-    #data.return_last_matches(4,7)
-    #Generowanie meczów do przewidzenia
-    #league = league_module.League(matches_df, teams_df)
+        print("{};{};{}".format(id, predictions[i], generated_ou))
+       # print("Spotkanie: {} - {}".format(teams_dict[schedule[i][0]], teams_dict[schedule[i][1]]))
+        #print("Wygenerowana liczba bramek w spotkaniu: {} - O/U: {}".format(predictions[i], generated_ou))
+
+def predict_chosen_matches_winner(data, schedule, predict_model, teams_dict, ratings, upcoming_df):
+    external_tests = data.generate_winner_test(schedule, ratings)
+    external_tests_np = np.array(external_tests)
+    predictions = predict_model.make_winner_predictions(external_tests_np)
+    for i in range(len(predictions)):
+        record = upcoming_df.loc[(upcoming_df['home_team'] == schedule[i][0]) & (upcoming_df['away_team'] == schedule[i][1]) & (upcoming_df['season'] == 1)]
+        id = record.iloc[0]['id']
+        percentages = np.round(predictions[i] * 100, 2)
+        print("{};{:.2f};{:.2f};{:.2f}".format(id, percentages[0], percentages[1], percentages[2]))
+        #print("Spotkanie: {} - {}".format(teams_dict[schedule[i][0]], teams_dict[schedule[i][1]]))
+        #print(percentages)
 
 
 
 ##
 # Funkcja odpowiedzialna za rozruch oraz kontrolowanie przepływu programu
 def main():
-    matches_df, teams_df, upcoming_df = get_values()
-    rating_factory = ratings_module.RatingFactory()
-    my_rating = rating_factory.create_rating("MyRating", matches_df, teams_df)
-    my_rating.rating_wrapper()
-    matches_df, _, teams_dict , _ = my_rating.get_data()
-    #Filtrowanie zbioru względem danej drużyny
-    #filtered_matches_df = matches_df.loc[(matches_df['home_team'] == 154) | (matches_df['away_team'] == 154)]
-    #Wypisywanie drużyn oraz ich rankingów
-    #my_rating.print_ratings()
-    #my_rating.print_powers()
-    data = dataprep_module.DataPrep(matches_df, teams_df, upcoming_df)
     model_type = sys.argv[1]
     model_mode = sys.argv[2]
-    #team_id = int(sys.argv[3])
-    #accuracy_test(matches_df, teams_dict, teams_df, upcoming_df, int(sys.argv[3]))
-    #print(matches_df.head)
+    matches_df, teams_df, upcoming_df = get_values()
+    rating_factory = ratings_module.RatingFactory()
+    my_rating = ""
     if model_type == 'goals_total':
-        data.prepare_predict_goals()
-        _, _, _, model_columns_df = data.get_data() 
-        predict_model = model_module.Model(model_type, model_columns_df, 9, 10, model_mode)
-        predict_model.create_window()
-        predict_model.window_to_numpy(1)
-        predict_model.divide_set()
-        predict_model.train_goals_total_model()
-        predict_model.predict_test()
+        my_rating = rating_factory.create_rating("GoalsRating", matches_df, teams_df)
+        my_rating.rating_wrapper()
+        matches_df, _, teams_dict , powers, ratings, last_five_matches = my_rating.get_data()
+        #my_rating.print_ratings()
+    if model_type == 'winner':
+        my_rating = rating_factory.create_rating("WinnerRating", matches_df, teams_df)
+        my_rating.rating_wrapper()
+        matches_df, _, teams_dict , _, ratings = my_rating.get_data()
+        #my_rating.print_ratings()
+    if model_type == 'btts':
+        my_rating = rating_factory.create_rating("BTTSRating", matches_df, teams_df)
+        my_rating.rating_wrapper()
+        matches_df, _, teams_dict , _, ratings = my_rating.get_data()
+        #my_rating.print_ratings()
 
-    if model_type == 'goals_teams':
-        data.prepare_predict_team_goals()
-        _, _, _, model_columns_df = data.get_data() 
-        predict_model = model_module.Model(model_type, model_columns_df, 9, 10, model_mode)
-        predict_model.create_window()
-        predict_model.window_to_numpy(3)
-        predict_model.divide_set()
-        predict_model.train_goals_teams_model()
-        predict_model.predict_test()
+    data = dataprep_module.DataPrep(matches_df, teams_df, upcoming_df)
+    if sys.argv[3] != '-1':
+        if model_type == 'goals_total':
+            accuracy_test_goals(matches_df, teams_dict, teams_df, upcoming_df, int(sys.argv[3]))
+        if model_type == 'winner':
+            accuracy_test_winner(matches_df, teams_dict, teams_df, upcoming_df, int(sys.argv[3]))
+    #team_id = int(sys.argv[3])
+    #accuracy_test_goals(matches_df, teams_dict, teams_df, upcoming_df, int(sys.argv[3]))
+    else:
+        if model_type == 'goals_total':
+            data.prepare_predict_goals()
+            _, _, _, model_columns_df = data.get_data() 
+            print(model_columns_df.head(10))
+            predict_model = model_module.Model(model_type, model_columns_df, 9, 6, model_mode)
+            predict_model.create_window()
+            predict_model.window_to_numpy(1)
+            predict_model.divide_set()
+            predict_model.train_goals_total_model()
+            predict_model.goals_total_test()
 
-    #Mock testing
-    '''schedule = [[124, 147], [121, 321], [138, 129], [127, 140], [134, 143], [132, 133], [135, 142], [139, 125], [141, 122], [123, 144], [11, 6], [7, 14], [205, 198],
-                [157, 158], [159, 168], [155, 180], [160, 156], [183, 164], [165, 154], [169, 163], [161, 162], [166, 167],
-                [16, 17], [1, 10], [9, 2], [28, 21], [32, 23], [24, 30],
-                [213, 202], [207, 201], [323,224],
-                [280, 293], [282, 286], [327, 278], [291, 300], [288, 292]]''' #18.05.2024
-    
-    schedule = [[53, 66], [65, 58], [59, 56], [74, 67], [61, 63], [64, 54], [51, 60], [68, 62], [52, 57], [70, 55], #Premier League
-                [136, 107], [106, 116], [109, 113], [114, 112], [111, 119], [126, 105], [110, 120], [115, 108], [117, 118], #Ligue 1
-                [264, 268], [259, 263], [257, 267], [262, 260], [270, 284], [277, 269], [265, 273], [272, 266], [261, 258], #La Liga 
-                [281, 290], [303, 274], [294, 326], #LaLiga 2
-                [174, 188], [322, 186], [173, 170], [178, 177], [176, 182], [187, 181], [194, 171], [189, 175], [184, 185], #2. Bundesliga
-                [13, 4], [15, 5], [12, 3], #Ekstraklasa 
-                [319, 35], [22, 33], [20, 27], #1 Liga Fortuna
-                [210, 218], [208, 226], [209, 211], [200, 199], [203, 219] #Serie A
-                ]
-    predict_chosen_matches(data, schedule, predict_model, teams_dict)
+        if model_type == 'winner':
+            data.prepare_predict_winner()
+            _, _, _, model_columns_df = data.get_data()
+            predict_model = model_module.Model(model_type, model_columns_df, 9, 2, model_mode)
+            predict_model.create_window()
+            predict_model.window_to_numpy(3)
+            predict_model.divide_set()
+            predict_model.train_winner_model()
+            predict_model.test_winner_model()
+        
+        if model_type =='btts':
+            data.prepare_predict_winner()
+            _, _, _, model_columns_df = data.get_data()
+            predict_model = model_module.Model(model_type, model_columns_df, 9, 2, model_mode)
+            predict_model.create_window()
+            predict_model.window_to_numpy(3)
+            predict_model.divide_set()
+            predict_model.train_winner_model()
+            predict_model.test_winner_model()
+        schedule = [
+            [15,16], [6, 17], [11, 12], [14, 3], [4, 5], [18, 10], [2, 13], [7, 1], [9, 8], #Ekstralasa kolejka 28
+            [16, 10], [4, 7], [6, 9], [17, 12], [8, 2], [13, 14], [18, 3], [5, 1], [15, 11], #Ekstralasa kolejka 29
+            [9, 15], [2, 6], [7, 18], [1, 17], [12, 4], [10, 8], [11, 5], [3, 13], [14, 16], #Ekstralasa kolejka 30
+            [13, 7], [17, 3], [18, 1], [8, 4], [11, 2], [15, 12], [16, 9], [5, 10], [6, 14], #Ekstralasa kolejka 31
+            [28, 23], [318, 27], [34, 30], [32, 35], [19, 24], [31, 21], [20, 22], [48, 33], [26, 319], #Fortuna 1 Liga kolejka 27
+            [319, 28], [30, 26], [48, 24], [33, 34], [23, 20], [35, 31], [27, 19], [21, 318], [22, 32], #Fortuna 1 Liga kolejka 28
+            [26, 33], [28, 30], [34, 24], [19, 21], [48, 27], [20, 319], [22, 35], [318, 31], [32, 23], #Fortuna 1 Liga kolejka 29
+            [24, 26], [30, 20], [33, 28], [27, 34], [21, 48], [319, 32], [23, 22], [31, 19], [35, 318], #Fortuna 1 Liga kolejka 30
+            [58, 55], [65, 70], [74, 59], [52, 68], [67, 60], [63, 56], [51, 64], [57, 62], [53, 54], [61, 66], #Premier League kolejka 33
+            [59, 61], [68, 65], [56, 58], [70, 74], [60, 53], [66, 67], [54, 63], [64, 57], [62,51], [55, 52], #Premier League kolejka 34
+            [57, 51], [62, 64], [56, 74], [58, 70], [60, 68], [66, 65], [54, 61], [63, 59], [55, 53], [67, 52], #Premier League kolejka 35
+            [68, 66], [53, 63], [65, 62], [59, 54], [74, 58], [70, 67], [52, 60], [61, 57], [51, 55], [64, 56], #Premier League kolejka 36
+            [320, 71], [72, 86], [90, 85], [89, 79], [82, 92], [102, 84], [87, 78], [88, 76], [100, 81], [73, 75], [80, 91], [77, 83], # Championship kolejka 43
+            [71, 77], [78, 73], [79, 80], [76, 89], [91, 90], [81, 320], [83, 87], [75, 82], [92, 88], [86, 100], [84, 72], [85, 102], # Championship kolejka 44
+            [92, 72], [86, 85], [89, 91], [78, 84], [79, 90], [87, 320], [76, 80], [100, 77], [73, 81], [75, 83], [82, 102], [88, 71], # Championship kolejka 45
+            [90, 76], [85, 92], [102, 79], [72, 73], [71, 86], [84, 75], [320, 82], [91, 78], [81, 89], [83, 100], [80, 87], [77, 88], # Championship kolejka 46
+            [199, 212], [213, 211], [207, 204], [206, 208], [198, 226], [210, 201], [209, 203], [200, 218], [205, 219], [202, 215], #Seria A kolejka 32
+            [219, 199], [218, 204], [211, 198], [215, 209], [210, 213], [207, 226], [212, 205], [208, 202], [203, 206], [201, 200], #Seria A kolejka 33
+            [202, 211], [206, 209], [205, 210], [226, 212], [219, 218], [200, 207], [204, 201], [199, 215], [213, 208], [198, 203], #Seria A kolejka 34
+            [201, 219], [203, 204], [218, 213], [211, 226], [208, 199], [212, 202], [210, 200], [207, 206], [209, 198], [215, 205], #Seria A kolejka 35
+            [233, 323], [238, 235], [236, 230], [216, 237], [234, 324], [217, 231], [239, 228], [325, 244], [223, 214], [220, 224], #Seria B kolejka 33
+            [228, 223], [244, 239], [235, 233], [230, 234], [224, 237], [324, 236], [323, 216], [325, 220], [214, 217], [231, 238], #Seria B kolejka 34
+            [234, 323], [220, 216], [224, 214], [233, 231], [223, 325], [237, 235], [238, 324], [239, 230], [228, 244], [217, 236], #Seria B kolejka 35
+            [216, 234], [235, 239], [323, 220], [236, 238], [214, 228], [231, 237], [230, 223], [324, 224], [325, 217], [244, 233], #Seria B kolejka 36
+            [262, 269], [259, 266], [267, 271], [265, 258], [270, 257], [284, 268], [277, 279], [264, 261], [260, 273], [263, 272], #LaLiga kolejka 31
+            [264, 277], [269, 284], [267, 263], [272, 262], [266, 270], [271, 260], [273, 261], [279, 259], [258, 257], [268, 265], #LaLiga kolejka 32
+            [273, 271], [257, 272], [279, 269], [259, 264], [260, 258], [270, 265], [277, 263], [261, 267], [262, 268], [284, 266], #LaLiga kolejka 33
+            [271, 264], [260, 284], [258, 270], [266, 257], [265, 259], [263, 262], [269, 261], [272, 279], [268, 277], [267, 273], #LaLiga kolejka 34
+            [282, 275], [286, 290], [274, 327], [278, 300], [289, 295], [287, 291], [288, 281], [292, 293], [294, 276], [326, 280], [303, 296], #LaLiga 2 kolejka 35
+            [291, 282], [300, 274], [293, 278], [296, 326], [276, 286], [280, 294], [275, 288], [281, 303], [327, 287], [295, 292], [290, 289], #LaLiga 2 kolejka 36
+            [288, 293], [292, 300], [282, 294], [276, 275], [286, 296], [303, 327], [289, 291], [278, 290], [274, 280], [287, 281], [326, 295], #LaLiga 2 kolejka 37
+            [296, 278], [295, 274], [280, 289], [293, 276], [290, 303], [281, 300], [288, 287], [275, 286], [327, 282], [294, 292], [291, 326], #LaLiga 2 kolejka 38
+            [126, 106], [119, 115], [108, 117], [136, 120], [112, 116], [111, 118], [114, 105], [110, 109], [107, 113], #Ligue 1 kolejka 29 
+            [113, 114], [120, 108], [106, 112], [136, 126], [109, 119], [115, 116], [118, 110], [117, 107], [105, 111], #Ligue 1 kolejka 30
+            [116, 120], [105, 136], [126, 109], [112, 115], [114, 117], [119, 113], [108, 118], [111, 110], [107, 106], #Ligue 1 kolejka 31
+            [118, 120], [136, 119], [106, 114], [109, 111], [126, 108], [110, 112], [113, 105], [115, 107], [117, 116], #Ligue 1 kolejka 32
+            [122, 125], [127, 138], [134, 141], [321, 133], [147, 135], [142, 144], [139, 121], [123, 129], [143, 140], [132, 124], #Ligue 2 kolejka 32
+            [141, 121], [122, 134], [133, 147], [124, 123], [144, 132], [321, 139], [135, 138], [129, 143], [140, 142], [125, 127], #Ligue 2 kolejka 33
+            [121, 142], [138, 321], [127, 147], [134, 144], [132, 125], [135, 124], [139, 133], [141, 129], [123, 140], [143, 122], #Ligue 2 kolejka 34
+            [125, 134], [122, 139], [133, 123], [144, 138], [321, 141], [142, 127], [129, 124], [140, 135], [143, 132], [147, 121], #Ligue 2 kolejka 35
+            [168, 157], [162, 165], [163, 155], [154, 164], [167, 183], [156, 161], [169, 160], [180, 158], [159, 166],  #Bundesliga kolejka 29
+            [160, 168], [164, 180], [183, 156], [165, 163], [161, 167], [157, 154], [166, 169], [155, 159], [158, 162],  #Bundesliga kolejka 30
+            [167, 165], [154, 160], [168, 166], [156, 155], [158, 161], [159, 169], [163, 157], [162, 164], [180, 183],  #Bundesliga kolejka 31
+            [165, 156], [155, 168], [169, 154], [161, 180], [166, 163], [164, 158], [157, 167], [160, 159], [183, 162],  #Bundesliga kolejka 32
+            [173, 187], [171, 189], [182, 194], [175, 186], [184, 174], [170, 177], [181, 176], [188, 178], [185, 322],  #2. Bundesliga kolejka 29 
+            [177, 175], [322, 170], [174, 173], [187, 184], [194, 181], [178, 182], [176, 185], [186, 171], [189, 188],  #2. Bundesliga kolejka 30
+            [171, 176], [185, 189], [181, 178], [182, 187], [175, 322], [170, 174], [177, 186], [188, 194], [184, 173],  #2. Bundesliga kolejka 31
+            [174, 177], [178, 185], [173, 181], [194, 170], [189, 186], [187, 188], [322, 171], [176, 175], [184, 182],  #2. Bundesliga kolejka 32
+        ]
+        '''schedule = [#[159, 202], [129, 141], [216, 323], [26,31], [206,204], [228,220], [275,289], [296, 287], [212, 215], [8,18], [263, 259], [257, 267], [53,52],
+                    [202, 159]]'''
+        #print(len(model_columns_df) - int(len(model_columns_df)*0.8)-2)
+        #print(model_columns_df[val: val+10])
+        #print(model_columns_df[int(len(model_columns_df)*0.8)])
+        predict_chosen_matches_winner(data, schedule, predict_model, teams_dict, ratings, upcoming_df)
+        #predict_chosen_matches_goals(data, schedule, predict_model, teams_dict, ratings, powers, last_five_matches, upcoming_df)
+        #Mock testing
 
 if __name__ == '__main__':
     main()

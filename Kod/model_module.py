@@ -2,15 +2,17 @@ import mysql.connector
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import tensorflow as tf
 from tensorflow.keras.models import Sequential, load_model
 from tensorflow.keras.callbacks import ModelCheckpoint
 from sklearn.metrics import accuracy_score
 from tensorflow.keras.optimizers import Adagrad
 from tensorflow.keras.models import load_model
-from tensorflow.keras import layers
+from tensorflow.keras import layers, backend
 from tensorflow.keras.losses import SparseCategoricalCrossentropy
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import OneHotEncoder, MinMaxScaler
+import random
 
 class Model:
     def __init__(self, model_type, model_columns_df, entries, features, create_model):
@@ -55,7 +57,7 @@ class Model:
 
         return normalized_data_list
     
-    def ranked_probability_score(y_true, y_pred):
+    '''def ranked_probability_score(y_true, y_pred):
         N = len(y_true)  # liczba obserwacji
         M = len(y_pred[0])  # liczba możliwych wyników
 
@@ -72,27 +74,50 @@ class Model:
         # Obliczanie średniego RPS
         mean_rps = np.mean(rps_array)
         
-        return mean_rps
+        return mean_rps'''
+    
+    def ranked_probability_score(self, y_true, y_pred):
+        """
+        Calculate the Ranked Probability Score (RPS) for probabilistic multi-class predictions.
+        
+        Parameters:
+        y_true (tensor): True class labels in one-hot encoded format.
+        y_pred (tensor): Predicted probabilities for each class.
+        
+        Returns:
+        tensor: The RPS loss value.
+        """
+        # Calculate the cumulative sums of the predicted and true probabilities
+        cumulative_true = tf.cumsum(y_true, axis=-1)
+        cumulative_pred = tf.cumsum(y_pred, axis=-1)
+        
+        # Calculate the squared differences
+        squared_diff = tf.square(cumulative_true - cumulative_pred)
+        
+        # Sum the squared differences across all classes
+        rps = tf.reduce_mean(squared_diff, axis=-1)
+        
+        return tf.reduce_mean(rps)
 
     def create_window(self):
         model_tolist = self.model_columns_df.values.tolist()
         iter = 0
         for index, match in self.model_columns_df.iterrows():
-            self.window_helper.append({'id' : index, 
-                                       'Match-8' : model_tolist[iter], 
-                                       'Match-7' : model_tolist[iter+1], 
-                                       'Match-6' : model_tolist[iter+2], 
-                                       'Match-5' : model_tolist[iter+3], 
-                                       'Match-4' : model_tolist[iter+4], 
-                                       'Match-3' : model_tolist[iter+5], 
-                                       'Match-2' : model_tolist[iter+6],
-                                       'Match-1' : model_tolist[iter+7],
-                                       'Match-CURR' : model_tolist[iter+8]})
+            self.window_helper.append({'id' : model_tolist[iter+8][0], 
+                                       'Match-8' : model_tolist[iter][1:], 
+                                       'Match-7' : model_tolist[iter+1][1:], 
+                                       'Match-6' : model_tolist[iter+2][1:], 
+                                       'Match-5' : model_tolist[iter+3][1:], 
+                                       'Match-4' : model_tolist[iter+4][1:], 
+                                       'Match-3' : model_tolist[iter+5][1:], 
+                                       'Match-2' : model_tolist[iter+6][1:],
+                                       'Match-1' : model_tolist[iter+7][1:],
+                                       'Match-CURR' : model_tolist[iter+8][1:]})
             iter = iter + 1
             if iter > len(self.model_columns_df)-self.entries:
                 break
         self.window_df = pd.DataFrame(self.window_helper)
-        self.window_df = self.window_df.drop(columns=['id'])
+        #self.window_df = self.window_df.drop(columns=['id'])
 
     def remade(self, labels):
         new_self_x = []
@@ -107,12 +132,14 @@ class Model:
         
     def window_to_numpy(self, labels):
         df_as_np = self.window_df.to_numpy()
-        self.indexes = list(range(1, len(df_as_np) + 1))
-        mid = df_as_np[:, 0:-1]
+        #self.indexes = list(range(1, len(df_as_np) + 1)) 
+        self.indexes = df_as_np[:, 0]
+        mid = df_as_np[:, 1:]
         tmp_y = df_as_np[:, -1]
         for element in tmp_y:
             self.y.append(element[(-1) * labels :])
         self.X = mid.reshape((len(self.indexes), mid.shape[1], 1))
+        #print("SELF.X po RESHAPE: ", self.X[0])
         self.X = self.remade(labels)
         #Normalizacja
         #self.X = self.normalize_rank(self.X)
@@ -126,10 +153,11 @@ class Model:
         self.indexes_train, self.X_train, self.y_train = self.indexes[:first], self.X[:first], self.y[:first]
         self.indexes_val, self.X_val, self.y_val = self.indexes[first:second], self.X[first:second], self.y[first:second]
         self.indexes_test, self.X_test, self.y_test = self.indexes[second:], self.X[second:], self.y[second:]
+        #print("SELF.X_TRAIN: ", self.X_train[0])
 
     def train_goals_total_model(self):
         if self.create_model == 'new':
-            self.model = Sequential([layers.Input((int(self.entries-1), self.features)),
+            self.model = Sequential([layers.Input((int(self.entries), self.features)),
                     layers.LSTM(64, activation = 'relu'),
                     layers.Dense(32, activation = 'relu'),
                     layers.Dense(16, activation = 'relu'),
@@ -143,53 +171,34 @@ class Model:
         else:
             self.model = load_model('model_goals/')
 
-    def train_goals_per_team(self):
-        if self.create_model == 'new':
-            self.model = Sequential([layers.Input((int(self.entries-1), self.features)),
-                    layers.LSTM(64, activation = 'relu'),
-                    layers.Dense(32, activation = 'relu'),
-                    layers.Dense(16, activation = 'relu'),
-                    layers.Dense(3)])
-            cp = ModelCheckpoint('model_team_goals/', save_best_only = True)
-            self.model.compile(loss='mse', 
-                optimizer=Adagrad(learning_rate=0.001),
-                metrics=['accuracy'])
-
-            self.model.fit(self.X_train, self.y_train, validation_data=(self.X_val, self.y_val), epochs=25, batch_size = 32, callbacks = [cp])
-            #print(self.model.summary())
-        else:
-            self.model = load_model('model_team_goals/')
-
-        #test_predictions = model.predict(self.X_test).flatten().astype(int)
-        #accuracy = accuracy_score(test_predictions, self.y_test)
-        #print("Accuracy:", accuracy)
-        #plt.plot(self.indexes_test[:50], test_predictions[:50])
-        #plt.plot(self.indexes_test[:50], self.y_test[:50])
-        #plt.legend(['Testing Predictions', 'Testing Observations'])
-        #plt.show()
-
-    def make_predictions(self, tests):
+    def make_goals_predictions(self, tests):
         test_prediction = self.model.predict(tests).flatten().astype(int)
         test_prediction = np.clip(test_prediction, 0, 6)
         return test_prediction
-
-    def train_goals_teams_model(self):
-        if self.create_model == 'new':
-            self.model = Sequential([layers.Input((int(self.entries-1), self.features)),
-                    layers.LSTM(64, activation = 'relu'),
-                    layers.Dense(32, activation = 'relu'),
-                    layers.Dense(3)])
-            cp = ModelCheckpoint('model_goals_teams/', save_best_only = True)
-            self.model.compile(loss='mse', 
-                optimizer=Adagrad(learning_rate=0.001),
-                metrics=['accuracy'])
-
-            self.model.fit(self.X_train, self.y_train, validation_data=(self.X_val, self.y_val), epochs=50, callbacks = [cp])
-            #print(self.model.summary())
-        else:
-            self.model = load_model('model_goals_teams/')
     
-    def predict_external_graphs(self, team_name):
+    def make_winner_predictions(self, tests):
+        test_prediction = self.model.predict(tests)
+        #test_prediction = np.argmax(test_prediction, axis=1)
+        return test_prediction
+
+
+    def goals_total_test(self):
+        test_predictions = self.model.predict(self.X_test).flatten().astype(int)
+        accuracy = accuracy_score(test_predictions, self.y_test)
+        test_predictions = np.clip(test_predictions, 0, 6)
+        ou_predictions = 0
+        for i in range(len(test_predictions)):
+            if (self.y_test[i][0] < 2.5 and test_predictions[i] < 2.5) or (self.y_test[i][0] > 2.5 and test_predictions[i] > 2.5):
+                ou_predictions += 1
+        print("Accuracy:", accuracy)
+        print("OU: ", ou_predictions / len(test_predictions))
+        graph_indexes = [x for x in range(1,51)]
+        plt.plot(graph_indexes, test_predictions[:50])
+        plt.plot(graph_indexes, self.y_test[:50])
+        plt.legend(['Testing Predictions', 'Testing Observations'])
+        plt.show()
+
+    def graph_team_goals(self, team_name):
         test_predictions = self.model.predict(self.X_test).flatten().astype(int)
         test_predictions = np.clip(test_predictions, 0, 6)
         plt.plot(self.indexes_test, test_predictions)
@@ -208,69 +217,60 @@ class Model:
                 exact_accuracy = exact_accuracy + 1
         return exact_accuracy / len(test_predictions), ou_accuracy / len(test_predictions), exact_accuracy, ou_accuracy, len(test_predictions)
     
-    def predict_test(self):
-        test_predictions = self.model.predict(self.X_test).flatten().astype(int)
-        print(test_predictions)
-        accuracy = accuracy_score(test_predictions, self.y_test)
-        test_predictions = np.clip(test_predictions, 0, 6)
-        ou_predictions = 0
-        for i in range(len(test_predictions)):
-            if (self.y_test[i][0] < 2.5 and test_predictions[i] < 2.5) or (self.y_test[i][0] > 2.5 and test_predictions[i] > 2.5):
-                ou_predictions += 1
-        print("Accuracy:", accuracy)
-        print("OU: ", ou_predictions / len(test_predictions))
-        plt.plot(self.indexes_test[:50], test_predictions[:50])
-        plt.plot(self.indexes_test[:50], self.y_test[:50])
-        plt.legend(['Testing Predictions', 'Testing Observations'])
-        plt.show()
+    def graph_team_winner(self, team_name):
+        test_predictions = self.model.predict(self.X_test)
+        np_array = np.array(self.y_test)
+        test_max = np.argmax(np_array, axis=1)
+        predict_max = np.argmax(test_predictions, axis = 1)
+        plt.plot(self.indexes_test, predict_max)
+        plt.plot(self.indexes_test, test_max)
+        plt.legend(['Predykcje', 'Obserwacje'], loc='upper left')
+        plt.savefig('graphs/winners/{}_winner.png'.format(team_name))
+        plt.close()
+        return np.sum(test_max  == predict_max ) / len(test_max), len(test_max)
 
-'''class Model:
-    def __init__(self, data):
-        self.data = data
-    
-    def preprocess_data(self):
-        # Implementacja ogólnej metody preprocess_data
-        pass
-    
-    def train(self):
-        # Implementacja ogólnej metody trenowania modelu
-        pass
-    
-    def evaluate(self):
-        # Implementacja ogólnej metody oceny wydajności modelu
-        pass
+    def train_winner_model(self):
+        if self.create_model == 'new':
+            self.model = Sequential([layers.Input((int(self.entries), self.features)),
+                    layers.LSTM(64, activation = 'relu'),
+                    layers.Dense(32, activation = 'relu'),
+                    layers.Dense(16, activation = 'relu'),
+                    layers.Dense(3, activation = 'softmax')])
+            cp = ModelCheckpoint('model_winner/', save_best_only = True)
+            self.model.compile(loss='categorical_crossentropy', 
+            #self.model.compile(loss=self.ranked_probability_score, 
+                optimizer=Adagrad(learning_rate=0.001),
+                metrics=['accuracy'])
 
-class WinnerModel(Model):
-    def __init__(self, data):
-        super().__init__(data)
+            self.model.fit(self.X_train, self.y_train, validation_data=(self.X_val, self.y_val), epochs=30, batch_size = 32, callbacks = [cp])
+            #print(self.model.summary())
+        else:
+            print(self.X[0])
+            self.model = load_model('model_winner_do_testa/')
     
-    def preprocess_data(self):
-        # Implementacja specyficznej metody preprocess_data dla WinnerModel
-        pass
-    
-    def train(self):
-        # Implementacja specyficznej metody trenowania modelu dla WinnerModel
-        pass
-    
-    def evaluate(self):
-        # Implementacja specyficznej metody oceny wydajności modelu dla WinnerModel
-        pass
-
-class GoalTotalModel(Model):
-    def __init__(self, data):
-        super().__init__(data)
-    
-    def preprocess_data(self):
-        # Implementacja specyficznej metody preprocess_data dla GoalTotalModel
-        pass
-    
-    def train(self):
-        # Implementacja specyficznej metody trenowania modelu dla GoalTotalModel
-        pass
-    
-    def evaluate(self):
-        # Implementacja specyficznej metody oceny wydajności modelu dla GoalTotalModel
-        pass'''
-
+    def test_winner_model(self):
+        test_predictions = self.model.predict(self.X_test)
+        np_array = np.array(self.y_test)
+        test_max = np.argmax(np_array, axis=1)
+        predict_max = np.argmax(test_predictions, axis = 1)
+        zeros_array = np.array([0 for x in test_max])
+        rand = np.array([random.randint(0,2) for x in test_max])
+        better_elo = []
+        #print(self.X_test[:10])
+        #print(test_predictions[:10])
+        #print(self.y_test[:10])
+        for element in self.X_test:
+            if element[0] > element[1]:
+                better_elo.append(0)
+            elif element[0] < element[1]:
+                better_elo.append(2)
+            else:
+                better_elo.append(1)
+        better_elo = np.array(better_elo)
+        print("Liczba meczów: {}".format(len(self.X_test)))
+        print("Skuteczność: {}".format(np.sum(test_max  == predict_max ) / len(test_max)))
+        print("Always_home: {}".format(np.sum(test_max  == zeros_array ) / len(test_max)))
+        print("Rand: {}".format(np.sum(test_max  == rand ) / len(test_max)))
+        print("Better ELO: {}".format(np.sum(test_max  == better_elo ) / len(test_max)))
 
 
