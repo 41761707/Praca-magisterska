@@ -1,0 +1,14 @@
+Spotkanie: Yamagata - Oita
+28.78, 71.22
+Spotkanie: Okayama - Kagoshima Utd
+39.80, 60.20
+Spotkanie: Gijon - Espanyol
+34.51, 65.49
+Spotkanie: New England Revolution - New York Red Bulls
+71.47, 28.53
+Spotkanie: Minnesota - FC Dallas
+67.53, 32.47
+Spotkanie: Sporting Kansas City - Seattle Sounders
+49.63, 50.37
+Spotkanie: St. Louis City - Portland Timbers
+72.42, 27.58

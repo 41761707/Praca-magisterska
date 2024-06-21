@@ -1,0 +1,48 @@
+Spotkanie: Yokohama M. - Machida
+Rankingi druzyny domowej 3.2020243263782118 - 3.174147158190468 - 3.3853841809368044 - 3.276984336063668
+Rankingi druzyny wyjazdowej 2.59339835130346 - 3.2719558608286077 - 2.525339800678254 - 2.745468968728151
+Wygenerowana liczba bramek w spotkaniu: 3 - O/U: O
+Spotkanie: Hiroshima - Verdy
+Rankingi druzyny domowej 3.1442257202662565 - 2.8565741237216415 - 3.0214544745712195 - 2.8574673282204213
+Rankingi druzyny wyjazdowej 3.140768919139506 - 2.6039069974328126 - 3.085955736763919 - 2.9156625680754393
+Wygenerowana liczba bramek w spotkaniu: 4 - O/U: O
+Spotkanie: C-Osaka - Urawa
+Rankingi druzyny domowej 2.401642573285727 - 2.6587621126383993 - 2.2459646216656983 - 2.7761116313828076
+Rankingi druzyny wyjazdowej 3.447949346878001 - 2.736288138648699 - 3.340005552568776 - 2.421385644040722
+Wygenerowana liczba bramek w spotkaniu: 3 - O/U: O
+Spotkanie: Kyoto - Sapporo
+Rankingi druzyny domowej 2.9778190461314393 - 2.9421470642764747 - 2.9537389797419396 - 3.087166893659873
+Rankingi druzyny wyjazdowej 3.2766947622457745 - 3.146804620469719 - 3.31768240505586 - 3.166244011609113
+Wygenerowana liczba bramek w spotkaniu: 3 - O/U: O
+Spotkanie: Fujieda MYFC - Yokohama FC
+Rankingi druzyny domowej 2.255418788522813 - 2.9135175595495766 - 2.2153428702622286 - 3.209537793648165
+Rankingi druzyny wyjazdowej 1.5945731250448412 - 2.420004358802231 - 1.6295716545819716 - 2.445514669425222
+Wygenerowana liczba bramek w spotkaniu: 1 - O/U: U
+Spotkanie: Kagoshima Utd - Yamagata
+Rankingi druzyny domowej 2.3015907964023614 - 2.073115373902282 - 2.292912392434469 - 2.0976816355431294
+Rankingi druzyny wyjazdowej 1.84134402852751 - 2.4550429079805065 - 1.9179307053248094 - 2.3820426540135604
+Wygenerowana liczba bramek w spotkaniu: 1 - O/U: U
+Spotkanie: Pohang - Daejeon
+Rankingi druzyny domowej 1.8729165809089006 - 2.6272638522774843 - 1.9615173811124849 - 2.3579280000782665
+Rankingi druzyny wyjazdowej 2.496525995502192 - 2.35011888871405 - 2.633399110669495 - 2.400473073524837
+Wygenerowana liczba bramek w spotkaniu: 2 - O/U: U
+Spotkanie: Gwangju - Gimcheon Sangmu
+Rankingi druzyny domowej 3.4343885545001456 - 2.4668237709384573 - 3.2689141935404935 - 2.465925689623312
+Rankingi druzyny wyjazdowej 2.0352151287472906 - 2.5374430279211837 - 2.1490062811564807 - 2.5298535913338824
+Wygenerowana liczba bramek w spotkaniu: 1 - O/U: U
+Spotkanie: Gangwon - Suwon FC
+Rankingi druzyny domowej 3.9397091584115973 - 2.40648675053904 - 3.9149930250271305 - 2.3120619691218813
+Rankingi druzyny wyjazdowej 2.9916337339607955 - 2.84177221745179 - 2.7691661150232534 - 2.716424553786779
+Wygenerowana liczba bramek w spotkaniu: 2 - O/U: U
+Spotkanie: Gyeongnam - Suwon Bluewings
+Rankingi druzyny domowej 2.6148301826720406 - 2.722032920877715 - 2.524674018439039 - 2.552438026228267
+Rankingi druzyny wyjazdowej 1.9547807665006216 - 2.4495810398560742 - 1.9891215738631052 - 2.507590633001989
+Wygenerowana liczba bramek w spotkaniu: 1 - O/U: U
+Spotkanie: Jeonnam - Bucheon
+Rankingi druzyny domowej 3.854422640486984 - 2.5218139466122578 - 3.837173070829349 - 2.620349764299219
+Rankingi druzyny wyjazdowej 1.7407548432879518 - 2.484209847825675 - 1.7094765242844843 - 2.370480799439231
+Wygenerowana liczba bramek w spotkaniu: 2 - O/U: U
+Spotkanie: Seongnam - Anyang
+Rankingi druzyny domowej 2.237565201353717 - 2.6101371402941056 - 2.121768955755016 - 2.538874789023934
+Rankingi druzyny wyjazdowej 2.514051966227895 - 2.5141103783409267 - 2.6732948836115438 - 2.517386305845795
+Wygenerowana liczba bramek w spotkaniu: 1 - O/U: U

@@ -1,0 +1,22 @@
+Spotkanie: Yamagata - Oita
+Rankingi: 1388.6790094073672 - 1491.6325204514976
+[21.58 34.03 44.39]
+Spotkanie: Okayama - Kagoshima Utd
+Rankingi: 1562.9036817438578 - 1348.5205827514953
+[77.43 18.42  4.15]
+Spotkanie: Gijon - Espanyol
+Rankingi: 1519.078629255509 - 1539.2872302464707
+[50.61 39.55  9.84]
+
+Spotkanie: New England Revolution - New York Red Bulls
+Rankingi: 1346.9137329635773 - 1664.5142983352036
+[ 3.38 38.27 58.35]
+Spotkanie: Minnesota - FC Dallas
+Rankingi: 1574.8129146068425 - 1410.933588802267
+[67.04 22.7  10.26]
+Spotkanie: Sporting Kansas City - Seattle Sounders
+Rankingi: 1339.3586169142234 - 1520.2829278685374
+[15.94 19.5  64.56]
+Spotkanie: St. Louis City - Portland Timbers
+Rankingi: 1443.3315770793959 - 1487.6490924819855
+[47.83 32.99 19.17]

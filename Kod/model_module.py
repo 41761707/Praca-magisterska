@@ -57,7 +57,7 @@ class Model:
 
         return normalized_data_list
     
-    '''def ranked_probability_score(y_true, y_pred):
+    def ranked_probability_score(y_true, y_pred):
         N = len(y_true)  # liczba obserwacji
         M = len(y_pred[0])  # liczba możliwych wyników
 
@@ -74,7 +74,7 @@ class Model:
         # Obliczanie średniego RPS
         mean_rps = np.mean(rps_array)
         
-        return mean_rps'''
+        return mean_rps
     
     def ranked_probability_score(self, y_true, y_pred):
         """
@@ -102,7 +102,7 @@ class Model:
     def create_window(self):
         model_tolist = self.model_columns_df.values.tolist()
         iter = 0
-        for index, match in self.model_columns_df.iterrows():
+        while True:
             self.window_helper.append({'id' : model_tolist[iter+8][0], 
                                        'Match-8' : model_tolist[iter][1:], 
                                        'Match-7' : model_tolist[iter+1][1:], 
@@ -148,28 +148,13 @@ class Model:
 
 
     def divide_set(self):
-        first = int(len(self.indexes) * 0.7)
-        second = int(len(self.indexes) * 0.8)
+        first = int(len(self.indexes) * 0.9)
+        second = int(len(self.indexes) * 0.85)
         self.indexes_train, self.X_train, self.y_train = self.indexes[:first], self.X[:first], self.y[:first]
         self.indexes_val, self.X_val, self.y_val = self.indexes[first:second], self.X[first:second], self.y[first:second]
         self.indexes_test, self.X_test, self.y_test = self.indexes[second:], self.X[second:], self.y[second:]
+        print("ROZMIAR TEST: ", len(self.indexes_test))
         #print("SELF.X_TRAIN: ", self.X_train[0])
-
-    def train_goals_total_model(self):
-        if self.create_model == 'new':
-            self.model = Sequential([layers.Input((int(self.entries), self.features)),
-                    layers.LSTM(64, activation = 'relu'),
-                    layers.Dense(32, activation = 'relu'),
-                    layers.Dense(16, activation = 'relu'),
-                    layers.Dense(1)])
-            cp = ModelCheckpoint('model_goals/', save_best_only = True)
-            self.model.compile(loss='mse', 
-                optimizer=Adagrad(learning_rate=0.001),
-                metrics=['accuracy'])
-            self.model.fit(self.X_train, self.y_train, validation_data=(self.X_val, self.y_val), epochs=30, batch_size = 32, callbacks = [cp])
-            #print(self.model.summary())
-        else:
-            self.model = load_model('model_goals/')
 
     def make_goals_predictions(self, tests):
         test_prediction = self.model.predict(tests).flatten().astype(int)
@@ -180,29 +165,17 @@ class Model:
         test_prediction = self.model.predict(tests)
         #test_prediction = np.argmax(test_prediction, axis=1)
         return test_prediction
-
-
-    def goals_total_test(self):
-        test_predictions = self.model.predict(self.X_test).flatten().astype(int)
-        accuracy = accuracy_score(test_predictions, self.y_test)
-        test_predictions = np.clip(test_predictions, 0, 6)
-        ou_predictions = 0
-        for i in range(len(test_predictions)):
-            if (self.y_test[i][0] < 2.5 and test_predictions[i] < 2.5) or (self.y_test[i][0] > 2.5 and test_predictions[i] > 2.5):
-                ou_predictions += 1
-        print("Accuracy:", accuracy)
-        print("OU: ", ou_predictions / len(test_predictions))
-        graph_indexes = [x for x in range(1,51)]
-        plt.plot(graph_indexes, test_predictions[:50])
-        plt.plot(graph_indexes, self.y_test[:50])
-        plt.legend(['Testing Predictions', 'Testing Observations'])
-        plt.show()
+    
+    def make_btts_predictions(self, tests):
+        test_prediction = self.model.predict(tests)
+        #test_prediction = np.argmax(test_prediction, axis=1)
+        return test_prediction
 
     def graph_team_goals(self, team_name):
         test_predictions = self.model.predict(self.X_test).flatten().astype(int)
         test_predictions = np.clip(test_predictions, 0, 6)
-        plt.plot(self.indexes_test, test_predictions)
-        plt.plot(self.indexes_test, self.y_test)
+        plt.plot([x for x in range(len(test_predictions))], test_predictions)
+        plt.plot([x for x in range(len(test_predictions))], self.y_test)
         plt.legend(['Predykcje', 'Obserwacje'])
         plt.savefig('graphs/goals/{}_goals_total.png'.format(team_name))
         plt.close()
@@ -217,17 +190,51 @@ class Model:
                 exact_accuracy = exact_accuracy + 1
         return exact_accuracy / len(test_predictions), ou_accuracy / len(test_predictions), exact_accuracy, ou_accuracy, len(test_predictions)
     
+    def graph_team_btts(self, team_name):
+        test_predictions = self.model.predict(self.X_test)
+        np_array = np.array(self.y_test)
+        test_max = np.argmax(np_array, axis=1)
+        predict_max = np.argmax(test_predictions, axis = 1)
+        plt.plot([x for x in range(len(predict_max))], predict_max)
+        plt.plot([x for x in range(len(predict_max))], test_max)
+        plt.legend(['Predykcje', 'Obserwacje'], loc='upper left')
+        plt.savefig('graphs/btts/{}_winner.png'.format(team_name))
+        plt.close()
+        print(test_max)
+        print(predict_max)
+        return np.sum(test_max  == predict_max ) / len(test_max), len(test_max)
+    
     def graph_team_winner(self, team_name):
         test_predictions = self.model.predict(self.X_test)
         np_array = np.array(self.y_test)
         test_max = np.argmax(np_array, axis=1)
         predict_max = np.argmax(test_predictions, axis = 1)
-        plt.plot(self.indexes_test, predict_max)
-        plt.plot(self.indexes_test, test_max)
+        plt.plot([x for x in range(len(predict_max))], predict_max)
+        plt.plot([x for x in range(len(predict_max))], test_max)
         plt.legend(['Predykcje', 'Obserwacje'], loc='upper left')
         plt.savefig('graphs/winners/{}_winner.png'.format(team_name))
         plt.close()
+        print(test_max)
+        print(predict_max)
         return np.sum(test_max  == predict_max ) / len(test_max), len(test_max)
+    
+    def train_goals_total_model(self):
+        if self.create_model == 'new':
+            self.model = Sequential([layers.Input((int(self.entries), self.features)),
+                    layers.LSTM(64, activation = 'relu'),
+                    layers.Dense(32, activation = 'relu'),
+                    layers.Dense(16, activation = 'relu'),
+                    layers.Dense(1)])
+            cp = ModelCheckpoint('model_goals/', save_best_only = True)
+            self.model.load_weights('model_goals/model_weights.h5')
+            self.model.compile(loss='mse', 
+                optimizer=Adagrad(learning_rate=0.001),
+                metrics=['accuracy'])
+            self.model.fit(self.X_train, self.y_train, validation_data=(self.X_val, self.y_val), epochs=30, batch_size = 32, callbacks = [cp])
+            #print(self.model.summary())
+        else:
+            self.model = load_model('model_goals/')
+            #self.model.save_weights('model_goals/model_weights.h5')
 
     def train_winner_model(self):
         if self.create_model == 'new':
@@ -237,16 +244,58 @@ class Model:
                     layers.Dense(16, activation = 'relu'),
                     layers.Dense(3, activation = 'softmax')])
             cp = ModelCheckpoint('model_winner/', save_best_only = True)
+            #self.model.load_weights('model_winner/model_weights.h5')
+            #self.model.compile(loss='categorical_crossentropy', 
+            self.model.compile(loss=self.ranked_probability_score, 
+                optimizer=Adagrad(learning_rate=0.001),
+                metrics=['accuracy'])
+
+            self.model.fit(self.X_train, self.y_train, validation_data=(self.X_val, self.y_val), epochs=30, batch_size = 32, callbacks = [cp])
+            print(self.model.summary())
+        else:
+            self.model = load_model('model_winner/')
+            self.model.save_weights('model_winner/model_weights.h5')
+
+    def train_btts_model(self):
+        if self.create_model == 'new':
+            self.model = Sequential([layers.Input((int(self.entries), self.features)),
+                    layers.LSTM(64, activation = 'sigmoid'),
+                    layers.Dense(32, activation = 'relu'),
+                    layers.Dense(16, activation = 'relu'),
+                    layers.Dense(2, activation = 'softmax')])
+            cp = ModelCheckpoint('model_btts/', save_best_only = True)
+            #self.model.load_weights('model_btts/model_weights.h5')
             self.model.compile(loss='categorical_crossentropy', 
             #self.model.compile(loss=self.ranked_probability_score, 
                 optimizer=Adagrad(learning_rate=0.001),
                 metrics=['accuracy'])
 
             self.model.fit(self.X_train, self.y_train, validation_data=(self.X_val, self.y_val), epochs=30, batch_size = 32, callbacks = [cp])
-            #print(self.model.summary())
+            print(self.model.summary())
         else:
-            print(self.X[0])
-            self.model = load_model('model_winner_do_testa/')
+            self.model = load_model('model_btts/')
+            self.model.save_weights('model_btts/model_weights.h5')
+
+    def goals_total_test(self):
+        test_predictions = self.model.predict(self.X_test).flatten().astype(int)
+        accuracy = accuracy_score(test_predictions, self.y_test)
+        test_predictions = np.clip(test_predictions, 0, 6)
+        ou_predictions = 0
+        for i in range(len(test_predictions)):
+            if (self.y_test[i][0] < 2.5 and test_predictions[i] < 2.5) or (self.y_test[i][0] > 2.5 and test_predictions[i] > 2.5):
+                ou_predictions += 1
+        print("Liczba meczów: {}".format(len(self.X_test)))
+        print("Accuracy:", accuracy)
+        print("OU accuracy: ", ou_predictions / len(test_predictions))
+        #for i in range(len(self.X_test)):
+        #    generated_ou = "U" if test_predictions[i] < 2.5 else "O"
+        #    print("{};{};{}".format(self.indexes_test[i], test_predictions[i], generated_ou))
+        graph_indexes = [x for x in range(1,51)]
+        plt.plot(graph_indexes, test_predictions[-50:])
+        plt.plot(graph_indexes, self.y_test[-50:])
+        plt.legend(['Predykcje', 'Obserwacje'])
+        plt.show()
+
     
     def test_winner_model(self):
         test_predictions = self.model.predict(self.X_test)
@@ -267,10 +316,28 @@ class Model:
             else:
                 better_elo.append(1)
         better_elo = np.array(better_elo)
+        #print("PIERWSZY TEST: ", self.indexes_test[0])
+        #print("OSTATNI TEST: ", self.indexes_test[-1])
         print("Liczba meczów: {}".format(len(self.X_test)))
         print("Skuteczność: {}".format(np.sum(test_max  == predict_max ) / len(test_max)))
         print("Always_home: {}".format(np.sum(test_max  == zeros_array ) / len(test_max)))
         print("Rand: {}".format(np.sum(test_max  == rand ) / len(test_max)))
         print("Better ELO: {}".format(np.sum(test_max  == better_elo ) / len(test_max)))
+        #for i in range(len(self.X_test)):
+        #    percentages = np.round(test_predictions[i] * 100, 2)
+        #    print("{};{:.2f};{:.2f};{:.2f}".format(self.indexes_test[i], percentages[0], percentages[1], percentages[2]))
+
+    def test_btts_model(self):
+        test_predictions = self.model.predict(self.X_test)
+        print("Liczba meczów: {}".format(len(self.X_test)))
+        test_predictions = self.model.predict(self.X_test)
+        np_array = np.array(self.y_test)
+        test_max = np.argmax(np_array, axis=1)
+        predict_max = np.argmax(test_predictions, axis = 1)
+        print("Liczba meczów: {}".format(len(self.X_test)))
+        print("Skuteczność: {}".format(np.sum(test_max  == predict_max ) / len(test_max)))
+        #for i in range(len(self.X_test)):
+        #    percentages = np.round(test_predictions[i] * 100, 2)
+        #    print("{};{:.2f};{:.2f};".format(self.indexes_test[i], percentages[0], percentages[1]))
 
 

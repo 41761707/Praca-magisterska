@@ -39,6 +39,31 @@ class DataPrep:
         self.model_columns_df = pd.DataFrame(self.model_columns)
         #self.model_columns_df.set_index('id', inplace=True)
 
+    def prepare_predict_btts(self):
+        for index, match in self.matches_df.iterrows():
+            results = []
+            if int(self.matches_df.loc[index, 'home_team_goals']) > 0 and int(self.matches_df.loc[index, 'away_team_goals']) > 0:
+                results = [1, 0]
+            else:
+                results = [0, 1]
+            self.model_columns.append({'id' : index, 
+                                       #'home_rating' : self.matches_df.loc[index, 'home_rating'],
+                                       #'away_rating' : self.matches_df.loc[index, 'away_rating'],
+                                       'home_home_att_power' : self.matches_df.at[index, 'home_home_att_power'],
+                                       'home_home_def_power' : self.matches_df.at[index, 'home_home_def_power'],
+                                       'home_away_att_power' : self.matches_df.at[index, 'home_away_att_power'],
+                                       'home_away_def_power' : self.matches_df.at[index, 'home_away_def_power'],
+                                       #'away_home_att_power' : self.matches_df.at[index, 'away_home_att_power'],
+                                       #'away_home_def_power' : self.matches_df.at[index, 'away_home_def_power'],
+                                       #'away_away_att_power' : self.matches_df.at[index, 'away_away_att_power'],
+                                       #'away_away_def_power' : self.matches_df.at[index, 'away_away_def_power'],
+                                       'home_goals_avg' : self.matches_df.at[index, 'home_goals_avg'],
+                                       'away_goals_avg' : self.matches_df.at[index, 'away_goals_avg'],
+                                       'btts_yes' : results[0],
+                                       'btts_no' : results[1]})
+        self.model_columns_df = pd.DataFrame(self.model_columns)
+        #self.model_columns_df.set_index('id', inplace=True)
+
     def prepare_predict_winner(self):
         for index, match in self.matches_df.iterrows():
             results = []
@@ -81,8 +106,22 @@ class DataPrep:
                 match['away_rating'], 
                 ]
     
+    def turn_match_into_numpy_btts(self, match):
+        return [
+                match['home_home_att_power'],
+                match['home_home_def_power'],
+                match['away_away_att_power'],
+                match['away_away_def_power'],
+                match['home_goals_avg'],
+                match['away_goals_avg']
+                ]
+    
     def return_last_matches(self, amount, team_id):
         filtered_rows = self.matches_df[(self.matches_df['home_team'] == int(team_id)) | (self.matches_df['away_team'] == int(team_id))].tail(int(amount))
+        return filtered_rows
+    
+    def return_last_matches_one(self, amount, team_id, matches_df):
+        filtered_rows = matches_df[(matches_df['home_team'] == int(team_id)) | (matches_df['away_team'] == int(team_id))].tail(int(amount))
         return filtered_rows
     
     def generate_goals_test(self, schedule, ratings, powers, last_five_matches):
@@ -101,15 +140,15 @@ class DataPrep:
                 match_schedule.append(home_team_schedule[i])
                 match_schedule.append(away_team_schedule[i])
                 #print(pair[0], pair[1])
-                match_schedule.append( [powers["{}h_att".format(pair[0])], 
+            match_schedule.append( [powers["{}h_att".format(pair[0])], 
                                        powers["{}h_def".format(pair[0])], 
                                        powers["{}a_att".format(pair[1])], 
                                        powers["{}a_def".format(pair[1])],
-                                       sum(last_five_matches[pair[1]]) / 5,
+                                       sum(last_five_matches[pair[0]]) / 5,
                                        sum(last_five_matches[pair[1]]) / 5])
             external_test.append(match_schedule)
         return external_test
-    
+
     def generate_winner_test(self, schedule, ratings):
         external_test = []
         for pair in schedule:
@@ -125,8 +164,54 @@ class DataPrep:
             for i in range(len(home_team_schedule)):
                 match_schedule.append(home_team_schedule[i])
                 match_schedule.append(away_team_schedule[i])
-                match_schedule.append([ratings[pair[0]],ratings[pair[1]]])
+            match_schedule.append([ratings[pair[0]],ratings[pair[1]]])
+            #match_schedule.append([self.get_last_elo(pair[0]), self.get_last_elo(pair[1])])
             external_test.append(match_schedule)
+        return external_test
+    
+    def generate_btts_test(self, schedule, ratings, powers, last_five_matches):
+        external_test = []
+        for pair in schedule:
+            match_schedule = []
+            home_team_df = self.return_last_matches(4, pair[0])
+            away_team_df = self.return_last_matches(4, pair[1])
+            home_team_schedule = []
+            away_team_schedule = []
+            for _, match in home_team_df.iterrows():
+                home_team_schedule.append(self.turn_match_into_numpy_btts(match))
+            for _, match in away_team_df.iterrows():
+                away_team_schedule.append(self.turn_match_into_numpy_btts(match))
+            for i in range(len(home_team_schedule)):
+                match_schedule.append(home_team_schedule[i])
+                match_schedule.append(away_team_schedule[i])
+                #print(pair[0], pair[1])
+            match_schedule.append( [
+                                    powers["{}h_att".format(pair[0])], 
+                                    powers["{}h_def".format(pair[0])], 
+                                    powers["{}a_att".format(pair[1])], 
+                                    powers["{}a_def".format(pair[1])],
+                                    sum(last_five_matches[pair[0]]) / 5,
+                                    sum(last_five_matches[pair[1]]) / 5])
+            external_test.append(match_schedule)
+        return external_test
+    
+    def generate_winner_test_one(self, pair, ratings, matches_df):
+        external_test = []
+        match_schedule = []
+        home_team_df = self.return_last_matches_one(4, pair[0], matches_df)
+        away_team_df = self.return_last_matches_one(4, pair[1], matches_df)
+        home_team_schedule = []
+        away_team_schedule = []
+        for _, match in home_team_df.iterrows():
+            home_team_schedule.append(self.turn_match_into_numpy_winner(match))
+        for _, match in away_team_df.iterrows():
+            away_team_schedule.append(self.turn_match_into_numpy_winner(match))
+        for i in range(len(home_team_schedule)):
+            match_schedule.append(home_team_schedule[i])
+            match_schedule.append(away_team_schedule[i])
+        match_schedule.append([ratings[pair[0]],ratings[pair[1]]])
+        # match_schedule.append([self.get_last_elo(pair[0]), self.get_last_elo(pair[1])])
+        external_test.append(match_schedule)
         return external_test
     ##
     # Funkcja odpowiadająca za zwrócenie przygotowanych danych do dalszych operacji

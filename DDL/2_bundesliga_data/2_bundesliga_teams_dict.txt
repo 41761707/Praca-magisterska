@@ -28,7 +28,6 @@
         'Sandhausen' : 191,
         'Dresden' : 192,
         'Aue' : 193,
-        'Ingolstadt' : 179,
         'Osnabruck' : 194,
         'Wurzburger Kickers' : 195,
         'Duisburg' : 196,

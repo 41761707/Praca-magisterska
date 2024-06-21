@@ -1,0 +1,36 @@
+Spotkanie: Yokohama M. - Machida
+Rankingi: 1615.3205419841545 - 1717.0957902260889
+[19.87 28.99 51.14]
+Spotkanie: Hiroshima - Verdy
+Rankingi: 1682.1928062952843 - 1689.829117319838
+[30.3  45.06 24.63]
+Spotkanie: C-Osaka - Urawa
+Rankingi: 1558.8944066887998 - 1645.1726847050281
+[21.19 30.56 48.24]
+Spotkanie: Kyoto - Sapporo
+Rankingi: 1447.0083653236618 - 1449.1694750723393
+[44.2  31.6  24.19]
+Spotkanie: Fujieda MYFC - Yokohama FC
+Rankingi: 1439.9162011208184 - 1642.4640052539585
+[ 8.75 28.18 63.07]
+Spotkanie: Kagoshima Utd - Yamagata
+Rankingi: 1348.5205827514953 - 1388.6790094073672
+[22.68 28.66 48.66]
+Spotkanie: Pohang - Daejeon
+Rankingi: 1625.7257277061804 - 1493.545963889956
+[61.77 32.68  5.55]
+Spotkanie: Gwangju - Gimcheon Sangmu
+Rankingi: 1550.9506634126797 - 1718.785121705616
+[10.33 23.36 66.31]
+Spotkanie: Gangwon - Suwon FC
+Rankingi: 1673.453305909011 - 1604.5453097131153
+[66.23 24.39  9.38]
+Spotkanie: Gyeongnam - Suwon Bluewings
+Rankingi: 1357.8656363066686 - 1376.2056561129534
+[47.33 25.53 27.15]
+Spotkanie: Jeonnam - Bucheon
+Rankingi: 1573.4210583267677 - 1482.296023499253
+[67.37 27.66  4.96]
+Spotkanie: Seongnam - Anyang
+Rankingi: 1335.4602343898302 - 1593.1777617702674
+[ 6.18 30.9  62.92]

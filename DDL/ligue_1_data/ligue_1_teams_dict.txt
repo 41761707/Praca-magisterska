@@ -31,5 +31,6 @@ team_ids = { 'PSG' : 105,
                  'Guingamp' : 135,
                  'Le Havre' : 136,
                  'Nancy' : 137,
-                 'Bastia' : 138
+                 'Bastia' : 138,
+				 'Rodez' : 141,
                 }

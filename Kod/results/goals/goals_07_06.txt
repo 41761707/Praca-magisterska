@@ -1,0 +1,20 @@
+Spotkanie: Blaublitz - Kumamoto - WYGRANA (+0.57u)
+Wygenerowana liczba bramek w spotkaniu: 1 - O/U: U
+Spotkanie: Ehime - Mito - PRZEGRANA (-1u)
+Wygenerowana liczba bramek w spotkaniu: 3 - O/U: O
+Spotkanie: Kofu - Vegalta Sendai - PRZEGRANA (-1u)
+Wygenerowana liczba bramek w spotkaniu: 3 - O/U: O
+Spotkanie: Shimizu - Fujieda MYFC - WYGRANA (+1.18u)
+Wygenerowana liczba bramek w spotkaniu: 1 - O/U: U
+Spotkanie: Tokushima - Yokohama FC - WYGRANA (+0.57u)
+Wygenerowana liczba bramek w spotkaniu: 2 - O/U: U
+Spotkanie: Renofa Yamaguchi - Chiba - PRZEGRANA (-1u)
+Wygenerowana liczba bramek w spotkaniu: 2 - O/U: U
+Spotkanie: Tochigi - Kusatsu - WYGRANA (+0.42u)
+Wygenerowana liczba bramek w spotkaniu: 1 - O/U: U
+Spotkanie: R. Oviedo - Eibar - WYGRANA (+0.52u)
+Wygenerowana liczba bramek w spotkaniu: 1 - O/U: U
+
+OBSTAWIONO: 8 
+POPRAWNIE: 5
+PROFIT: 0.26u

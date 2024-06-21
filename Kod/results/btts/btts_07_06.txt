@@ -1,0 +1,20 @@
+Spotkanie: Blaublitz - Kumamoto - PRZEGRANA (-1u)
+42.18, 57.82
+Spotkanie: Ehime - Mito - WYGRANA (+1.01u)
+49.07, 50.93
+Spotkanie: Kofu - Vegalta Sendai - WYGRANA (+0.8u)
+61.40, 38.60
+Spotkanie: Shimizu - Fujieda MYFC - PRZEGRANA (-1u)
+60.33, 39.67
+Spotkanie: Tokushima - Yokohama FC - PRZEGRANA (-1u)
+51.60, 48.40
+Spotkanie: Renofa Yamaguchi - Chiba - WYGRANA (+0.81u)
+73.13, 26.87
+Spotkanie: Tochigi - Kusatsu - PRZEGRANA (-1u)
+26.55, 73.45
+Spotkanie: R. Oviedo - Eibar - PRZEGRANA (-1u)
+56.61, 43.39
+
+OBSTAWIONO: 8
+POPRAWNIE: 3
+PROFIT: -2.38u

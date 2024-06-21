@@ -1,0 +1,28 @@
+Spotkanie: Yamagata - Oita
+Rankingi druzyny domowej 1.84134402852751 - 2.4550429079805065 - 1.9179307053248094 - 2.3820426540135604
+Rankingi druzyny wyjazdowej 1.990939170222457 - 2.5129522026917606 - 1.9912467969285517 - 2.5519428164960147
+Wygenerowana liczba bramek w spotkaniu: 0 - O/U: U
+Spotkanie: Okayama - Kagoshima Utd
+Rankingi druzyny domowej 1.909500488758583 - 2.7432837251614357 - 1.9967372264719705 - 2.647645181551804
+Rankingi druzyny wyjazdowej 2.3015907964023614 - 2.073115373902282 - 2.292912392434469 - 2.0976816355431294
+Wygenerowana liczba bramek w spotkaniu: 2 - O/U: U
+Spotkanie: Gijon - Espanyol
+Rankingi druzyny domowej 3.0768022969177267 - 2.293208736304341 - 3.033632419247463 - 2.173522081878422
+Rankingi druzyny wyjazdowej 1.4573400712923306 - 1.9122076054459465 - 1.3779659553667538 - 1.6352440736066816
+Wygenerowana liczba bramek w spotkaniu: 0 - O/U: U
+Spotkanie: New England Revolution - New York Red Bulls
+Rankingi druzyny domowej 2.6430822619220313 - 2.9629176771841736 - 2.7412403273683585 - 3.148982777702223
+Rankingi druzyny wyjazdowej 4.189496438536076 - 2.9753639641915712 - 4.134805594462052 - 2.996102591411193
+Wygenerowana liczba bramek w spotkaniu: 2 - O/U: U
+Spotkanie: Minnesota - FC Dallas
+Rankingi druzyny domowej 3.573087327216897 - 2.9117768415053895 - 3.812532514359331 - 3.048200321912698
+Rankingi druzyny wyjazdowej 2.5123548255268453 - 2.7617399124755933 - 2.4782967615890485 - 2.475914534406667
+Wygenerowana liczba bramek w spotkaniu: 4 - O/U: O
+Spotkanie: Sporting Kansas City - Seattle Sounders
+Rankingi druzyny domowej 4.122434856183447 - 2.648093355039822 - 3.937143470372337 - 2.5768692947342657
+Rankingi druzyny wyjazdowej 1.5135607438542555 - 3.0124526753066405 - 1.6132242103613903 - 2.8802640203192715
+Wygenerowana liczba bramek w spotkaniu: 3 - O/U: O
+Spotkanie: St. Louis City - Portland Timbers
+Rankingi druzyny domowej 3.1862357059010633 - 2.753862086760348 - 3.273991356510395 - 2.7603565773664376
+Rankingi druzyny wyjazdowej 4.755358818342343 - 3.542618440612139 - 4.870738962711957 - 3.5388861242252743
+Wygenerowana liczba bramek w spotkaniu: 3 - O/U: O

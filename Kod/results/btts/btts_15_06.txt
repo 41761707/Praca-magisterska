@@ -1,0 +1,24 @@
+Spotkanie: Yokohama M. - Machida
+69.96, 30.04
+Spotkanie: Hiroshima - Verdy
+71.42, 28.58
+Spotkanie: C-Osaka - Urawa
+63.89, 36.11
+Spotkanie: Kyoto - Sapporo
+42.05, 57.95
+Spotkanie: Fujieda MYFC - Yokohama FC
+49.38, 50.62
+Spotkanie: Kagoshima Utd - Yamagata
+19.52, 80.48
+Spotkanie: Pohang - Daejeon
+40.49, 59.51
+Spotkanie: Gwangju - Gimcheon Sangmu
+43.09, 56.91
+Spotkanie: Gangwon - Suwon FC
+69.84, 30.16
+Spotkanie: Gyeongnam - Suwon Bluewings
+31.21, 68.79
+Spotkanie: Jeonnam - Bucheon
+70.67, 29.33
+Spotkanie: Seongnam - Anyang
+39.19, 60.81

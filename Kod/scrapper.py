@@ -6,40 +6,57 @@ from datetime import datetime
 
 def get_team_id(team_name):
     team_ids = {
-        '1. FC Union Berlin' : 157,
-        '1. FC Koeln' : 164,
-        'Werder Brema' : 166,
-        'Bochum' : 167,
-        'VfB Stuttgart' : 169,
-        'FC Schalke 04' : 170,
-        'Hertha Berlin' : 171,
-        'Arminia Bielefeld' : 172,
-        'Furth' : 173,
-        'Düsseldorf' : 174,
-        'Paderborn' : 175,
-        'Hannover' : 176,
-        '1. FC Nürnberg' : 177,
-        'Hamburger SV' : 178,
-        'Ingolstadt' : 179,
-        'Darmstadt' : 180,
-        'Braunschweig' : 181,
-        'Kiel' : 182,
-        'Heidenheim' : 183,
-        'Wehen' : 184,
-        'St. Pauli' : 185,
-        'Karlsruher' : 186,
-        'Kaiserslautern' : 187,
-        'Magdeburg' : 188,
-        'Rostock' : 189,
-        'Regensburg' : 190,
-        'Sandhausen' : 191,
-        'Dresden' : 192,
-        'Aue' : 193,
-        'Ingolstadt' : 179,
-        'Osnabruck' : 194,
-        'Wurzburger Kickers' : 195,
-        'Duisburg' : 196,
-        'Monachium 1860' : 197
+        'Frosinone' : 226,
+        'Genoa' : 219,
+        'Bari' : 230,
+        'Parma' : 223,
+        'Cagliari' : 218,
+        'Sudtirol' : 231,
+        'Reggio Calabria' : 232,
+        'Venezia' : 220,
+        'Palermo' : 228,
+        'Modena' : 233,
+        'Pisa' : 234,
+        'Ascoli' : 235,
+        'Como' : 236,
+        'Ternana' : 237,
+        'Cittadella' : 238,
+        'Brescia' : 224,
+        'Cosenza' : 239,
+        'Perugia' : 240,
+        'Spal' : 225,
+        'Benevento' : 221,
+        'Lecce' : 213,
+        'Cremonese' : 216,
+        'Monza' : 208,
+        'L.R. Vicenza' : 241,
+        'Alessandria' : 242,
+        'Crotone' : 222,
+        'Pordenone' : 243,
+        'Empoli' : 211,
+        'Salernitana' : 212,
+        'Chievo' : 227,
+        'Reggiana' : 244,
+        'Pescara' : 229,
+        'Entella' : 245,
+        'Spezia' : 214,
+        'Trapani' : 246,
+        'Juve Stabia' : 247,
+        'Livorno' : 248,
+        'Verona' : 215,
+        'Foggia' : 249,
+        'Padova' : 250,
+        'AC Carpi' : 251,
+        'Cesena' : 252,
+        'Avellino' : 253,
+        'Novara' : 254,
+        'Pro Vercelli' : 255,
+        'Latina' : 256,
+		'Catanzaro' : 323,
+		'Sampdoria' : 217,
+		'FeralpiSalo' : 324,
+		'Lecco' : 325
+		
     }
     return team_ids[team_name]
 
@@ -92,19 +109,25 @@ def get_match_data(driver, league_id, season_id, link):
         'away_team_yc' : 0,
         'home_team_rc' : 0,
         'away_team_rc' : 0,
+        'round' : 0,
         'result' : 0}
-    # _row_1csk6_9 - klasa zawierająca informacje o statystykach meczowych
+    # _row_n1rcj_9 - klasa zawierająca informacje o statystykach meczowych
     # duelParticipant__startTime - czas rozegrania meczu (timestamp)
     # participant__participantName - drużyny biorące udział w meczu
     # detailScore__wrapper - wynik meczu
     driver.get(link)
     time.sleep(2) # Let the user actually see something!
-    # Znajdź wszystkie divy o klasie '_row_1csk6_9'
-    stat_divs = driver.find_elements(By.CLASS_NAME, "_row_1csk6_9")
+    # Znajdź wszystkie divy o klasie '_row_bn1w5_8'
+    stat_divs = driver.find_elements(By.CLASS_NAME, "_row_bn1w5_8")
     # Znajdź wszystkie divy o klasie 'duelParticipant__startTime'
     time_divs = driver.find_elements(By.CLASS_NAME, "duelParticipant__startTime")
     team_divs = driver.find_elements(By.CLASS_NAME, "participant__participantName")
     score_divs = driver.find_elements(By.CLASS_NAME, "detailScore__wrapper")
+    round_divs = driver.find_elements(By.CLASS_NAME, "tournamentHeader__country")
+    for div in round_divs:
+        round_info = div.text.strip()
+        round = round_info.split(" ")[-1]
+
     # Dodaj zawartość divów do listy danych
     for div in stat_divs:
         stats.append(div.text.strip())
@@ -121,6 +144,7 @@ def get_match_data(driver, league_id, season_id, link):
     match_data['home_team'] = get_team_id(match_info[1]) #nazwa gospodarzy
     match_data['away_team'] = get_team_id(match_info[3])
     match_data['game_date'] = parse_match_date(match_info[0])
+    match_data['round'] = round
     score = match_info[5].split('\n')
     home_goals = int(score[0])
     away_goals = int(score[2])
@@ -132,7 +156,6 @@ def get_match_data(driver, league_id, season_id, link):
         match_data['result'] = 'X'
     else:
         match_data['result'] = '2'
-
     for element in stats:
         stat = element.split('\n')
         if(stat[1] == 'Oczekiwane bramki (xG)'):
@@ -165,7 +188,6 @@ def get_match_data(driver, league_id, season_id, link):
         elif(stat[1] == 'Czerwone kartki'):
             match_data['home_team_rc'] = int(stat[0])
             match_data['away_team_rc'] = int(stat[2])
-    #print(match_data)
     return match_data
 
 def main():
@@ -209,6 +231,7 @@ home_team_yc, \
 away_team_yc, \
 home_team_rc, \
 away_team_rc, \
+round, \
 result)  \
 VALUES ({league}, \
 {season}, \
@@ -237,6 +260,7 @@ VALUES ({league}, \
 {away_team_yc}, \
 {home_team_rc}, \
 {away_team_rc}, \
+{round}, \
 '{result}');'''.format(**match_data)
         print(sql)
 if __name__ == '__main__':

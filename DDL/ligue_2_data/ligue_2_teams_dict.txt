@@ -38,5 +38,9 @@
                 'Beziers' : 152,
                 'Red Star' : 153,
 				'Angers' : 124,
-				'Concarneau' : 321
+				'Concarneau' : 321,
+				'Bourg en Bresse' : 328,
+				'Tours': 329,
+				'Reims' : 115,
+				'Strasbourg' : 119
                 }

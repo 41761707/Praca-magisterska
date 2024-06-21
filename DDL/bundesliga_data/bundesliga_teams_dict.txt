@@ -28,5 +28,6 @@
         'Darmstadt' : 180,
         'Braunschweig' : 181,
         'Kiel' : 182,
-        'Heidenheim' : 183
+        'Heidenheim' : 183,
+		'Düsseldorf' : 174
     }

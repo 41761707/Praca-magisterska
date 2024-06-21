@@ -6,36 +6,51 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from datetime import datetime
 
+import db_module
 def get_team_id(team_name):
-    team_ids = { 'Śląsk Wrocław' : 1,
-                 'Jagiellonia Białystok' : 2,
-                 'Lech Poznań' : 3,
-                 'Raków Częstochowa' : 4,
-                 'Legia Warszawa' : 5,
-                 'Pogoń Szczecin' : 6,
-                 'Górnik Zabrze' : 7,
-                 'Zagłębie Lubin' : 8,
-                 'Piast Gliwice' : 9,
-                 'Radomiak Radom' : 10,
-                 'Stal Mielec' : 11,
-                 'Widzew Łódź' : 12,
-                 'Cracovia' : 13,
-                 'Puszcza Niepołomice' : 14,
-                 'Warta Poznań' : 15,
-                 'Korona Kielce' : 16,
-                 'Ruch Chorzów' : 17,
-                 'ŁKS Łódź' : 18,
-                 'Wisła Płock' : 19,
-                 'Lechia Gdańsk' : 20,
-                 'Miedź Legnica' : 21,
-                 'Bruk-Bet T.' : 22,
-                 'Górnik Łęczna' : 23,
-                 'Wisła Kraków' : 24,
-                 'Podbeskidzie B-B' : 26,
-                 'Arka Gdynia' : 27,
-                 'Zagłębie Sosnowiec' : 28,
-                 'Sandecja Nowy Sącz' : 29
-                 }
+    team_ids = { 'Puszcza Niepołomice' : 14,
+'Górnik Zabrze' : 7,
+'Raków Częstochowa' : 4,
+'Radomiak Radom' : 10,
+'Stal Mielec' : 11,
+'Warta Poznań' : 15,
+'Widzew Łódź' : 12,
+'Korona Kielce' : 16,
+'Ruch Chorzów' : 17,
+'ŁKS Łódź' : 18,
+'Miedź Legnica' : 21,
+'Bruk-Bet T.' : 22,
+'Górnik Łęczna' : 24,
+'Wisła Kraków' : 23,
+'Podbeskidzie B-B' : 26,
+'Arka Gdynia' : 27,
+'Zagłębie Sosnowiec' : 28,
+'Sandecja Nowy Sącz' : 29,
+'Stal Rzeszów' : 30,
+'Chrobry Głogów' : 31,
+'GKS Katowice' : 32,
+'GKS Tychy' : 33,
+'Resovia Rzeszów' : 34,
+'Odra Opole' : 35,
+'Skra Częstochowa' : 36,
+'Chojniczanka' : 37,
+'Stomil Olsztyn' : 38,
+'Górnik Polkowice' : 39,
+'GKS Jastrzębie' : 40,
+'GKS Bełchatów' : 41,
+'Olimpia Grudziądz' : 42,
+'Wigry Suwałki' : 43,
+'Bytovia Bytów' : 44,
+'Garbarnia Kraków' : 45,
+'Pogoń Siedlce' : 46,
+'Wisła Puławy' : 47,
+'Znicz Pruszków' : 48,
+'MKS Kluczbork' : 49,
+'Wisła Płock' : 19,
+'Lechia Gdańsk' : 20,
+'Motor Lublin' : 318,
+'Polonia Warszawa' : 319,
+}
     return team_ids[team_name]
 
 def parse_match_date(match_date):
@@ -106,22 +121,93 @@ def get_1x2_odds(id, link, driver):
         except:
             # Obsługujemy przypadek, gdy tag img lub atrybut title nie jest obecny
             bookies.append(None)
+    for i in range(len(book_divs)):
+        text = book_divs[i].text.strip()
+        text_tab = text.split('\n')
+        text_1 = "INSERT INTO ODDS(match_id, bookmaker, event, odds) VALUES({}, {}, {}, {});".format(id, bookie_dict[bookies[i]], 1, text_tab[0])
+        text_2 = "INSERT INTO ODDS(match_id, bookmaker, event, odds) VALUES({}, {}, {}, {});".format(id, bookie_dict[bookies[i]], 2, text_tab[1])
+        text_3 = "INSERT INTO ODDS(match_id, bookmaker, event, odds) VALUES({}, {}, {}, {});".format(id, bookie_dict[bookies[i]], 3, text_tab[2])
+        print(text_1)
+        print(text_2)
+        print(text_3)
+        break
+        
+def get_over_under_odds(id, link, driver):
+    # 8 - o2,5
+    # 12 - u2,5
+    driver.get(link)
+    time.sleep(2)
+    book_divs = driver.find_elements(By.CLASS_NAME, "ui-table__row")
+    bookie_dict = {
+        'STS.pl' : 4,
+        'eFortuna.pl': 3,
+        'Betclic.pl' : 2,
+        'BETFAN' : 6,
+        'Etoto' : 7,
+        'LV BET': 5,
+        'Superbet.pl' : 1
+    }
+    bookies = []
+    for book in book_divs:
+        try:
+            # Szukamy tagu img wewnątrz obecnego diva
+            img_tag = book.find_element(By.TAG_NAME, "img")
+            # Pobieramy wartość atrybutu title z tagu img
+            title = img_tag.get_attribute("title").strip("'")
+            # Dodajemy tytuł do listy
+            bookies.append(title)
+        except:
+            # Obsługujemy przypadek, gdy tag img lub atrybut title nie jest obecny
+            bookies.append(None)
     iter = 1
     for i in range(len(book_divs)):
         text = book_divs[i].text.strip()
         text_tab = text.split('\n')
-        text_1 = "INSERT INTO ODDS(match, bookmaker, event, odds) VALUES({}, {}, {}, {});".format(id, bookie_dict[bookies[i]], 1, text_tab[0])
-        text_2 = "INSERT INTO ODDS(match, bookmaker, event, odds) VALUES({}, {}, {}, {});".format(id, bookie_dict[bookies[i]], 2, text_tab[1])
-        text_3 = "INSERT INTO ODDS(match, bookmaker, event, odds) VALUES({}, {}, {}, {});".format(id, bookie_dict[bookies[i]], 3, text_tab[2])
-        print(text_1)
-        print(text_2)
-        print(text_3)
-        
-def get_over_under_odds(id, link, driver):
-    pass
+        #print(text_tab)
+        if text_tab[0] == '2.5':
+            text_1 = "INSERT INTO ODDS(match_id, bookmaker, event, odds) VALUES({}, {}, {}, {});".format(id, bookie_dict[bookies[i]], 8, text_tab[1])
+            text_2 = "INSERT INTO ODDS(match_id, bookmaker, event, odds) VALUES({}, {}, {}, {});".format(id, bookie_dict[bookies[i]], 12, text_tab[2])
+            print(text_1)
+            print(text_2)
+            break
+        #print(text_3)
 
 def get_btts_odds(id, link, driver):
-    pass
+    # 6 - btts
+    # 172 - no btts
+    driver.get(link)
+    time.sleep(2)
+    book_divs = driver.find_elements(By.CLASS_NAME, "ui-table__row")
+    bookie_dict = {
+        'STS.pl' : 4,
+        'eFortuna.pl': 3,
+        'Betclic.pl' : 2,
+        'BETFAN' : 6,
+        'Etoto' : 7,
+        'LV BET': 5,
+        'Superbet.pl' : 1
+    }
+    bookies = []
+    for book in book_divs:
+        try:
+            # Szukamy tagu img wewnątrz obecnego diva
+            img_tag = book.find_element(By.TAG_NAME, "img")
+            # Pobieramy wartość atrybutu title z tagu img
+            title = img_tag.get_attribute("title").strip("'")
+            # Dodajemy tytuł do listy
+            bookies.append(title)
+        except:
+            # Obsługujemy przypadek, gdy tag img lub atrybut title nie jest obecny
+            bookies.append(None)
+    for i in range(len(book_divs)):
+        text = book_divs[i].text.strip()
+        text_tab = text.split('\n')
+        #print(text_tab)
+        text_1 = "INSERT INTO ODDS(match_id, bookmaker, event, odds) VALUES({}, {}, {}, {});".format(id, bookie_dict[bookies[i]], 6, text_tab[0])
+        text_2 = "INSERT INTO ODDS(match_id, bookmaker, event, odds) VALUES({}, {}, {}, {});".format(id, bookie_dict[bookies[i]], 172, text_tab[1])
+        print(text_1)
+        print(text_2)
+        break
 
 def get_handi_odds(id, link, driver):
     pass
@@ -134,7 +220,7 @@ def get_correct_score_odds(id, link, driver):
 
 def get_data(games, driver, matches_df, league_id, season_id):
     driver.get(games)
-    time.sleep(5)
+    time.sleep(15)
     game_divs = driver.find_elements(By.CLASS_NAME, "event__match")
     links = []
     for element in game_divs:
@@ -142,27 +228,16 @@ def get_data(games, driver, matches_df, league_id, season_id):
         links.append('https://www.flashscore.pl/mecz/{}'.format(id))
     for link in links:
         match_id = get_match_id(link, driver, matches_df, league_id, season_id)
-        get_1x2_odds(match_id, "{}{}".format(link,'#/zestawienie-kursow/kursy-1x2/koniec-meczu'), driver)
-        #get_over_under_odds(match_id, 'https://www.flashscore.pl/mecz/{}/#/zestawienie-kursow/powyzej-ponizej/koniec-meczu'.format(id), driver)
-        #get_btts_odds(match_id, 'https://www.flashscore.pl/mecz/{}/#/zestawienie-kursow/obie-druzyny-strzela/koniec-meczu'.format(id), driver)
+        #get_1x2_odds(match_id, "{}{}".format(link,'#/zestawienie-kursow/kursy-1x2/koniec-meczu'), driver)
+        #get_over_under_odds(match_id, "{}{}".format(link,'/#/zestawienie-kursow/powyzej-ponizej/koniec-meczu'), driver)
+        get_btts_odds(match_id, "{}{}".format(link,'#/zestawienie-kursow/obie-druzyny-strzela/koniec-meczu'), driver)
         #get_handi_odds(match_id, 'https://www.flashscore.pl/mecz/{}/#/zestawienie-kursow/handicap-azjat/koniec-meczu'.format(id), driver)
         #get_double_chance_odds(match_id, 'https://www.flashscore.pl/mecz/{}/#/zestawienie-kursow/podwojna-szansa/koniec-meczu'.format(id), driver)
         #get_correct_score_odds(match_id,'https://www.flashscore.pl/mecz/KGgchU8S/#/zestawienie-kursow/correct-score/koniec-meczu'.format(id), driver)
 
-
-def db_connect():
-    # Połączenie z bazą danych MySQL
-    conn = mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="PLACEHOLDER",
-        database="ekstrabet"
-    )
-    return conn
-
 def main():
     #WYWOŁANIE
-    conn = db_connect()
+    conn = db_module.db_connect()
     league_id = int(sys.argv[1])
     season_id = int(sys.argv[2])
     query = "SELECT * FROM matches where league = {} and season = {}".format(league_id, season_id)
@@ -172,8 +247,8 @@ def main():
     driver = webdriver.Chrome(options=options)
     #Link do strony z wynikami
     #games = 'https://www.flashscore.pl/pilka-nozna/polska/pko-bp-ekstraklasa-2023-2024/wyniki/'
-    #games = sys.argv[3]
-    games = 'https://www.flashscore.pl/pilka-nozna/polska/pko-bp-ekstraklasa-2023-2024/wyniki/'
+    games = sys.argv[3]
+    #games = 'https://www.flashscore.pl/pilka-nozna/polska/pko-bp-ekstraklasa-2023-2024/wyniki/'
     get_data(games, driver, matches_df, league_id, season_id)
     conn.close()
 if __name__ == '__main__':
